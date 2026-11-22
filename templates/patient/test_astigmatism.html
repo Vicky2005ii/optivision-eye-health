@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Astigmatism Clock Dial Test | OptiVision{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xl">
+          <i data-lucide="compass" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Astigmatism Clock Dial & Fan Test</h1>
+          <p class="text-xs text-slate-500">Corneal Refractive Asymmetry & Principal Meridian Axis Detection</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold text-slate-500">Testing Eye:</span>
+        <select id="astigEyeSelect" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700 text-xs font-bold text-purple-700 dark:text-purple-300">
+          <option value="OD">OD (Right Eye)</option>
+          <option value="OS">OS (Left Eye)</option>
+          <option value="OU">OU (Both Eyes)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-800/40 text-xs text-slate-600 dark:text-slate-300 space-y-2">
+      <div class="font-bold text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
+        <i data-lucide="info" class="w-4 h-4 text-purple-600"></i> How to evaluate this test:
+      </div>
+      <p class="leading-relaxed">
+        Sit back ~60 cm (arm's length) from the screen. Cover one eye. Look at the central white hub of the dial below.
+        <b>Do all the radiating spokes appear equally sharp and dark?</b>
+        If you have astigmatism, some spokes will appear distinctly bolder, darker, or doubled compared to the others.
+      </p>
+    </div>
+
+    <!-- Clock Dial Canvas / SVG Display -->
+    <div class="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-700 relative">
+      <svg id="clockDialSvg" width="380" height="380" viewBox="-190 -190 380 380" class="select-none">
+        <!-- Outer circle -->
+        <circle cx="0" cy="0" r="175" fill="none" stroke="#E2E8F0" class="dark:stroke-slate-700" stroke-width="2"/>
+        
+        <!-- 12 Radiating Triplet Lines (Clock Dial) -->
+        <g id="spokesGroup">
+          <!-- Rendered dynamically with 3 parallel lines each for high sensitivity -->
+        </g>
+
+        <!-- Central Fixation Circle -->
+        <circle cx="0" cy="0" r="16" fill="#FFFFFF" class="dark:fill-slate-800" stroke="#7C3AED" stroke-width="3"/>
+        <circle cx="0" cy="0" r="4" fill="#7C3AED"/>
+      </svg>
+
+      <div class="mt-4 text-center text-xs text-slate-500">
+        Click on the clock hour or meridian below that appears <b>darkest or most pronounced</b>.
+      </div>
+    </div>
+
+    <!-- Interactive Selection Controls -->
+    <div class="space-y-4 pt-2">
+      <div class="text-xs font-bold text-slate-700 dark:text-slate-300 text-center">
+        Select the Meridian or Spokes that appear darker:
+      </div>
+
+      <!-- Quick Meridian Buttons -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-xl mx-auto text-xs">
+        <button onclick="selectMeridian('12-6', '90° (Vertical Spoke)', 'WTR')" class="meridian-btn p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-purple-500 font-medium text-slate-800 dark:text-slate-200 text-center transition">
+          <div class="font-bold text-sm">12 - 6 o'clock</div>
+          <div class="text-[10px] text-purple-600 dark:text-purple-400">90° Vertical Axis</div>
+        </button>
+
+        <button onclick="selectMeridian('3-9', '180° (Horizontal Spoke)', 'ATR')" class="meridian-btn p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-purple-500 font-medium text-slate-800 dark:text-slate-200 text-center transition">
+          <div class="font-bold text-sm">3 - 9 o'clock</div>
+          <div class="text-[10px] text-purple-600 dark:text-purple-400">180° Horizontal Axis</div>
+        </button>
+
+        <button onclick="selectMeridian('1-7', '60° Oblique Spoke', 'Oblique')" class="meridian-btn p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-purple-500 font-medium text-slate-800 dark:text-slate-200 text-center transition">
+          <div class="font-bold text-sm">1 - 7 o'clock</div>
+          <div class="text-[10px] text-purple-600 dark:text-purple-400">60° Oblique Axis</div>
+        </button>
+
+        <button onclick="selectMeridian('2-8', '30° Oblique Spoke', 'Oblique')" class="meridian-btn p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-purple-500 font-medium text-slate-800 dark:text-slate-200 text-center transition">
+          <div class="font-bold text-sm">2 - 8 o'clock</div>
+          <div class="text-[10px] text-purple-600 dark:text-purple-400">30° Oblique Axis</div>
+        </button>
+
+        <button onclick="selectMeridian('10-4', '150° Oblique Spoke', 'Oblique')" class="meridian-btn p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-purple-500 font-medium text-slate-800 dark:text-slate-200 text-center transition">
+          <div class="font-bold text-sm">10 - 4 o'clock</div>
+          <div class="text-[10px] text-purple-600 dark:text-purple-400">150° Oblique Axis</div>
+        </button>
+
+        <button onclick="selectMeridian('11-5', '120° Oblique Spoke', 'Oblique')" class="meridian-btn p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-purple-500 font-medium text-slate-800 dark:text-slate-200 text-center transition">
+          <div class="font-bold text-sm">11 - 5 o'clock</div>
+          <div class="text-[10px] text-purple-600 dark:text-purple-400">120° Oblique Axis</div>
+        </button>
+
+        <!-- No Astigmatism Button (All lines appear identical) -->
+        <button onclick="selectMeridian('NONE', 'All Spokes Sharp & Equal', 'Normal')" class="meridian-btn col-span-2 p-3 rounded-xl border-2 border-emerald-500 bg-emerald-50/70 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 font-bold text-center transition">
+          <div class="font-bold text-sm">All Spokes Appear Completely Identical</div>
+          <div class="text-[10px] text-emerald-600 dark:text-emerald-400">No noticeable astigmatism detected</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Selected State Banner & Confirmation -->
+    <div id="selectionSummary" class="hidden p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <div class="text-xs text-slate-500">Selected Diagnostic Finding:</div>
+        <div class="font-bold text-sm text-slate-900 dark:text-white" id="selectedFindingText">-</div>
+        <div class="text-[11px] text-purple-600 dark:text-purple-300" id="selectedFindingDetail">-</div>
+      </div>
+      <button onclick="saveAstigmatismResult()" class="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md transition whitespace-nowrap">
+        Save Diagnostic Result
+      </button>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let chosenData = null;
+
+  function renderClockDial() {
+    const group = document.getElementById('spokesGroup');
+    group.innerHTML = '';
+
+    // 12 clock hours
+    for (let h = 1; h <= 12; h++) {
+      const angleDeg = (h * 30) - 90; // 12 o'clock is at -90 deg
+      const rad = (angleDeg * Math.PI) / 180;
+      
+      const rInner = 28;
+      const rOuter = 145;
+      const rLabel = 165;
+
+      // Draw 3 fine parallel lines for each spoke to test resolution
+      const perpRad = rad + Math.PI / 2;
+      const offsets = [-2.5, 0, 2.5];
+
+      offsets.forEach(offset => {
+        const x1 = Math.cos(rad) * rInner + Math.cos(perpRad) * offset;
+        const y1 = Math.sin(rad) * rInner + Math.sin(perpRad) * offset;
+        const x2 = Math.cos(rad) * rOuter + Math.cos(perpRad) * offset;
+        const y2 = Math.sin(rad) * rOuter + Math.sin(perpRad) * offset;
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', '#0F172A');
+        line.setAttribute('stroke-width', '1.8');
+        line.setAttribute('class', 'dark:stroke-slate-200');
+        group.appendChild(line);
+      });
+
+      // Hour number label
+      const lx = Math.cos(rad) * rLabel;
+      const ly = Math.sin(rad) * rLabel + 4;
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', lx);
+      text.setAttribute('y', ly);
+      text.setAttribute('fill', '#64748B');
+      text.setAttribute('font-size', '13');
+      text.setAttribute('font-weight', 'bold');
+      text.setAttribute('text-anchor', 'middle');
+      text.textContent = h.toString();
+      group.appendChild(text);
+    }
+  }
+  renderClockDial();
+
+  function selectMeridian(code, label, type) {
+    chosenData = { code, label, type };
+    document.querySelectorAll('.meridian-btn').forEach(b => {
+      b.classList.remove('ring-2', 'ring-purple-600', 'bg-purple-50');
+    });
+    event.currentTarget.classList.add('ring-2', 'ring-purple-600', 'bg-purple-50');
+
+    document.getElementById('selectionSummary').classList.remove('hidden');
+    document.getElementById('selectedFindingText').innerText = label;
+    
+    if (code === 'NONE') {
+      document.getElementById('selectedFindingDetail').innerText = "Refraction meridians symmetric. No significant cylinder detected.";
+    } else {
+      document.getElementById('selectedFindingDetail').innerText = `Principal meridian: ${label} • Clinical Cylinder Axis estimation: ${code.split('-')[1]} x 30° Rule`;
+    }
+  }
+
+  function saveAstigmatismResult() {
+    if (!chosenData) return;
+
+    const eye = document.getElementById('astigEyeSelect').value;
+    const isNormal = (chosenData.code === 'NONE');
+    const severity = isNormal ? 'normal' : 'mild';
+    const primaryScore = isNormal ? 'No Astigmatism Detected' : `Astigmatism Detected: ${chosenData.label}`;
+    const secondaryScore = isNormal ? 'Meridians Uniform' : `Type: ${chosenData.type} Astigmatism`;
+
+    const payload = {
+      test_type: 'astigmatism',
+      eye_tested: eye,
+      primary_score: primaryScore,
+      secondary_score: secondaryScore,
+      numerical_metric: isNormal ? 0.0 : 0.75,
+      severity: severity,
+      distance_cm: 60.0,
+      test_data: {
+        meridian_selected: chosenData.code,
+        label: chosenData.label,
+        type: chosenData.type,
+        eye: eye
+      },
+      patient_notes: `Clock dial test for ${eye}: ${primaryScore}.`
+    };
+
+    fetch('/api/save-test-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      window.location.href = '/patient/dashboard';
+    });
+  }
+</script>
+{% endblock %}

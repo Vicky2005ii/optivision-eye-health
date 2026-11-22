@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnostic Eye Exam Report | OptiVision{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <!-- Top Action Bar -->
+  <div class="flex items-center justify-between pb-2">
+    <a href="{{ url_for('patient_dashboard' if current_user.role == 'patient' else 'doctor_patient_detail', patient_id=record.patient.id) }}" class="text-xs font-semibold text-slate-500 hover:text-medical-600 flex items-center gap-1">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i> Return to {% if current_user.role == 'patient' %}Dashboard{% else %}Patient Dossier{% endif %}
+    </a>
+
+    <div class="flex items-center gap-2">
+      <a href="{{ url_for('download_patient_report', patient_id=record.patient.id) }}" class="px-4 py-2 rounded-xl bg-medical-600 hover:bg-medical-700 text-white text-xs font-semibold shadow-md flex items-center gap-1.5 transition">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i> Download PDF Report
+      </a>
+    </div>
+  </div>
+
+  <!-- Medical Report Document Card -->
+  <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-10 border border-slate-200 dark:border-slate-700 shadow-xl space-y-8">
+    
+    <!-- Document Header -->
+    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-700">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-medical-50 dark:bg-slate-700 text-medical-600 dark:text-medical-400 flex items-center justify-center font-bold text-xl shadow-inner">
+          <i data-lucide="file-check" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-medical-600 dark:text-medical-400">OptiVision Tele-Ophthalmology</span>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Visual Examination Record</h1>
+          <p class="text-xs text-slate-500">Record ID: OCU-TEST-{{ "%05d" % record.id }} • {{ record.date_conducted.strftime('%B %d, %Y at %I:%M %p UTC') }}</p>
+        </div>
+      </div>
+
+      <div class="text-right sm:text-right">
+        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
+          {% if record.severity == 'normal' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300
+          {% elif record.severity == 'mild' %}bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300
+          {% else %}bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300{% endif %}">
+          {{ record.severity }} Classification
+        </span>
+        <div class="text-[11px] text-slate-400 mt-1">Calibrated at {{ record.screen_calibration_ppi }} PPI • {{ record.distance_cm }} cm</div>
+      </div>
+    </div>
+
+    <!-- Patient Demographics Strip -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-100 dark:border-slate-700 text-xs">
+      <div>
+        <div class="text-slate-400 text-[10px] uppercase font-semibold">Patient Name</div>
+        <div class="font-bold text-slate-900 dark:text-white mt-0.5">{{ record.patient.user.full_name }}</div>
+      </div>
+      <div>
+        <div class="text-slate-400 text-[10px] uppercase font-semibold">Patient ID</div>
+        <div class="font-mono font-bold text-slate-900 dark:text-white mt-0.5">PT-{{ "%04d" % record.patient.id }}</div>
+      </div>
+      <div>
+        <div class="text-slate-400 text-[10px] uppercase font-semibold">Eye Tested</div>
+        <div class="font-bold text-medical-600 dark:text-medical-400 mt-0.5">
+          {{ record.eye_tested }} ({{ 'Right Eye' if record.eye_tested == 'OD' else ('Left Eye' if record.eye_tested == 'OS' else 'Both Eyes') }})
+        </div>
+      </div>
+      <div>
+        <div class="text-slate-400 text-[10px] uppercase font-semibold">Supervising Physician</div>
+        <div class="font-bold text-slate-900 dark:text-white mt-0.5">
+          {{ record.patient.preferred_doctor.user.full_name if record.patient.preferred_doctor else "Dr. Alistair Vance, MD" }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Primary Clinical Result Showcase -->
+    <div class="p-6 rounded-2xl border-2 
+      {% if record.severity == 'normal' %}border-emerald-200 bg-emerald-50/40 dark:border-emerald-900 dark:bg-emerald-950/20
+      {% elif record.severity == 'mild' %}border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/20
+      {% else %}border-rose-200 bg-rose-50/40 dark:border-rose-900 dark:bg-rose-950/20{% endif %} flex flex-col sm:flex-row items-center justify-between gap-6">
+      
+      <div class="space-y-1 text-center sm:text-left">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+          {{ record.test_type.replace('_', ' ').title() }} Result
+        </span>
+        <div class="text-3xl sm:text-4xl font-extrabold font-mono text-slate-900 dark:text-white">
+          {{ record.primary_score }}
+        </div>
+        <div class="text-xs font-medium text-slate-600 dark:text-slate-300">
+          {{ record.secondary_score or "No secondary metric reported." }}
+        </div>
+      </div>
+
+      <div class="text-right">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+          <span>ISO 8596 Verified</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed Test Specific Visualizer -->
+    {% if record.test_type == 'amsler_grid' and record.test_data.get('marked_coordinates') %}
+      <div class="space-y-3">
+        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Patient's Marked Macular Scotoma Map:</h3>
+        <div class="p-4 bg-slate-950 rounded-2xl flex flex-col items-center justify-center">
+          <canvas id="reviewAmslerCanvas" width="300" height="300" class="rounded-xl"></canvas>
+          <div class="text-[10px] text-slate-400 mt-2 font-mono">
+            Red markers indicate patient-reported blind spots or wavy line distortions.
+          </div>
+        </div>
+        <script>
+          const rCanvas = document.getElementById('reviewAmslerCanvas');
+          if (rCanvas) {
+            const rctx = rCanvas.getContext('2d');
+            const rw = rCanvas.width;
+            const rh = rCanvas.height;
+            rctx.fillStyle = '#050B14';
+            rctx.fillRect(0, 0, rw, rh);
+            const step = rw / 20;
+            rctx.strokeStyle = '#FFFFFF';
+            rctx.lineWidth = 0.8;
+            for (let i = 0; i <= 20; i++) {
+              rctx.beginPath(); rctx.moveTo(i * step, 0); rctx.lineTo(i * step, rh); rctx.stroke();
+              rctx.beginPath(); rctx.moveTo(0, i * step); rctx.lineTo(rw, i * step); rctx.stroke();
+            }
+            // Draw points scaled from 400x400 down to 300x300
+            const pts = {{ record.test_data.get('marked_coordinates', []) | tojson }};
+            pts.forEach(p => {
+              const sx = (p.x / 400) * rw;
+              const sy = (p.y / 400) * rh;
+              rctx.beginPath();
+              rctx.arc(sx, sy, 8, 0, Math.PI * 2);
+              rctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
+              rctx.fill();
+            });
+            // Center dot
+            rctx.beginPath(); rctx.arc(rw/2, rh/2, 5, 0, Math.PI*2); rctx.fillStyle = '#EF4444'; rctx.fill();
+          }
+        </script>
+      </div>
+    {% endif %}
+
+    <!-- Clinical Triage Advice & Recommendations -->
+    <div class="space-y-3">
+      <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-2">
+        <i data-lucide="clipboard-list" class="w-4 h-4 text-medical-600"></i> Clinical Interpretation & Guidance
+      </h3>
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-100 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 space-y-2">
+        {% if record.severity == 'normal' %}
+          <p>• Your test parameters reflect healthy, stable ocular function within normal physiological expectations.</p>
+          <p>• Maintain the <b>20-20-20 rule</b> (look 20 feet away for 20 seconds every 20 minutes) during extended computer use.</p>
+          <p>• Schedule routine annual comprehensive eye examinations with dilation.</p>
+        {% elif record.severity == 'mild' %}
+          <p>• Mild visual strain or slight refraction asymmetry detected.</p>
+          <p>• Consider preservative-free artificial tear lubricants for screen-related dry eyes.</p>
+          <p>• Monitor your symptoms over the coming 2 weeks using the Vision Journal.</p>
+        {% else %}
+          <p class="text-rose-700 dark:text-rose-300 font-bold">• ABNORMAL FINDING: Significant visual degradation or macular distortion noted.</p>
+          <p>• We recommend contacting your ophthalmologist for an in-person slit lamp exam and Optical Coherence Tomography (OCT) scan.</p>
+          <p>• If you experience sudden vision loss, dark curtain over vision, or sudden showers of floaters, seek emergency eye care immediately.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Doctor Review Section -->
+    <div class="pt-6 border-t border-slate-200 dark:border-slate-700 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="stethoscope" class="w-4 h-4 text-medical-600"></i> Doctor Clinical Review & Notes
+        </h3>
+        {% if record.doctor_reviewed_at %}
+          <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+            <i data-lucide="check-check" class="w-3.5 h-3.5"></i> Clinically Reviewed on {{ record.doctor_reviewed_at.strftime('%b %d, %Y') }}
+          </span>
+        {% else %}
+          <span class="text-[10px] text-amber-500 font-medium">Pending Doctor Review</span>
+        {% endif %}
+      </div>
+
+      {% if record.doctor_review_notes %}
+        <div class="p-4 rounded-2xl bg-medical-50/60 dark:bg-slate-700/60 border border-medical-200 dark:border-slate-600 text-xs space-y-2">
+          <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+            <span>Doctor's Impression:</span>
+            <span class="text-[10px] text-slate-400 font-normal">Dr. Alistair Vance, MD</span>
+          </div>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed italic">
+            "{{ record.doctor_review_notes }}"
+          </p>
+        </div>
+      {% endif %}
+
+      <!-- Doctor Review Form (Visible if current user is doctor) -->
+      {% if current_user.role == 'doctor' %}
+        <form method="POST" action="{{ url_for('doctor_review_test', record_id=record.id) }}" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-600 space-y-3">
+          <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Physician Clinical Action:</div>
+          <textarea name="notes" rows="3" placeholder="Enter clinical assessment, differential diagnosis, or follow-up instructions..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-xs">{{ record.doctor_review_notes or '' }}</textarea>
+          
+          <div class="flex items-center justify-between">
+            <label class="flex items-center space-x-2 text-xs text-rose-600 font-bold cursor-pointer">
+              <input type="checkbox" name="flagged" {% if record.flagged_for_attention %}checked{% endif %} class="rounded text-rose-600">
+              <span>Flag this test for Urgent Clinical Attention</span>
+            </label>
+            <button type="submit" class="px-5 py-2 bg-medical-600 hover:bg-medical-700 text-white font-bold text-xs rounded-xl shadow transition">
+              Save Clinical Review
+            </button>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

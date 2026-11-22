@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Consultations & Appointments | OptiVision{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+    <div>
+      <span class="text-xs font-bold uppercase tracking-wider text-medical-600 dark:text-medical-400">Tele-Ophthalmology Network</span>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">Doctor Consultations</h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1">
+        Schedule secure telehealth video reviews or in-person comprehensive examinations.
+      </p>
+    </div>
+
+    <button onclick="document.getElementById('bookingModal').classList.remove('hidden')" class="px-5 py-2.5 rounded-xl bg-medical-600 hover:bg-medical-700 text-white font-bold text-xs shadow-md shadow-medical-600/30 flex items-center gap-1.5 transition">
+      <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+      <span>Schedule New Consultation</span>
+    </button>
+  </div>
+
+  <!-- Appointments List -->
+  <div class="space-y-4">
+    <h2 class="font-bold text-base text-slate-900 dark:text-slate-100">Your Consultations</h2>
+
+    {% for apt in appointments %}
+      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-medical-50 dark:bg-slate-700 text-medical-600 dark:text-medical-400 font-bold flex flex-col items-center justify-center shrink-0">
+            <span class="text-sm leading-none">{{ apt.scheduled_time.strftime('%d') }}</span>
+            <span class="text-[9px] uppercase font-semibold leading-none mt-1">{{ apt.scheduled_time.strftime('%b') }}</span>
+          </div>
+
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-slate-900 dark:text-slate-100">{{ apt.scheduled_time.strftime('%A, %B %d, %Y at %I:%M %p') }}</span>
+              <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full 
+                {% if apt.status == 'scheduled' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300
+                {% elif apt.status == 'completed' %}bg-slate-100 text-slate-700
+                {% else %}bg-rose-100 text-rose-800{% endif %}">
+                {{ apt.status }}
+              </span>
+            </div>
+
+            <div class="text-xs text-medical-700 dark:text-medical-400 font-semibold mt-1">
+              Physician: {{ apt.doctor.user.full_name }} ({{ apt.doctor.title }})
+            </div>
+
+            <p class="text-xs text-slate-500 mt-0.5">
+              Reason: <b>{{ apt.reason }}</b> • Type: {{ apt.consultation_type }}
+            </p>
+
+            {% if apt.doctor_notes %}
+              <div class="mt-2 text-[11px] p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg text-slate-600 dark:text-slate-300 italic">
+                Doctor's Follow-up Note: "{{ apt.doctor_notes }}"
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="flex sm:flex-col items-end gap-2">
+          {% if apt.status == 'scheduled' %}
+            <button onclick="alert('Launching secure HIPAA-compliant WebRTC Telehealth video session...')" class="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+              <i data-lucide="video" class="w-3.5 h-3.5"></i> Enter Video Room
+            </button>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <div class="bg-white dark:bg-slate-800 rounded-3xl p-10 text-center border border-slate-200 dark:border-slate-700 text-slate-500 space-y-3">
+        <i data-lucide="calendar" class="w-12 h-12 mx-auto text-slate-400"></i>
+        <h3 class="font-bold text-base text-slate-800 dark:text-slate-200">No Scheduled Consultations</h3>
+        <p class="text-xs max-w-sm mx-auto">
+          Connect with an eyecare specialist to review your test batteries and discuss personalized vision health.
+        </p>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- Booking Modal -->
+<div id="bookingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-5">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+      <div class="flex items-center gap-2 text-medical-600 dark:text-medical-400 font-bold text-lg">
+        <i data-lucide="calendar-plus" class="w-5 h-5"></i>
+        <span>Book Eye Specialist Consultation</span>
+      </div>
+      <button onclick="document.getElementById('bookingModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <form method="POST" action="{{ url_for('patient_appointments') }}" class="space-y-4 text-xs">
+      <div>
+        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Select Physician / Specialist</label>
+        <select name="doctor_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-medium">
+          {% for doc in doctors %}
+            <option value="{{ doc.id }}">{{ doc.user.full_name }} — {{ doc.specialty }} (${{ doc.consultation_fee }} USD)</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Preferred Date</label>
+          <input type="date" name="date" required value="{{ (now).strftime('%Y-%m-%d') }}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Preferred Time</label>
+          <input type="time" name="time" required value="14:30" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Consultation Modality</label>
+        <select name="consultation_type" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+          <option value="Telehealth Video Review">Telehealth Video Review (Home Screenings Analysis)</option>
+          <option value="In-Clinic Comprehensive Exam">In-Clinic Comprehensive Exam (Dilated Fundus & Tonometry)</option>
+          <option value="Urgent Ocular Triage">Urgent Ocular Triage (Sudden flashes, floaters, scotoma)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Reason for Visit / Symptoms</label>
+        <textarea name="reason" rows="3" required placeholder="Describe what symptoms or test results you would like the doctor to review..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"></textarea>
+      </div>
+
+      <div class="pt-2 flex justify-end space-x-3">
+        <button type="button" onclick="document.getElementById('bookingModal').classList.add('hidden')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-xl">Cancel</button>
+        <button type="submit" class="px-5 py-2 bg-medical-600 hover:bg-medical-700 text-white font-bold rounded-xl shadow">Confirm Booking</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

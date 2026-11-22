@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Optical Prescriptions & Eyewear | OptiVision{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
+    <div>
+      <span class="text-xs font-bold uppercase tracking-wider text-medical-600 dark:text-medical-400">Refractive Care</span>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">Optical Prescriptions</h1>
+      <p class="text-xs text-slate-500 mt-1">
+        Official digital prescriptions verified and e-signed by your optometrist or ophthalmologist.
+      </p>
+    </div>
+
+    <a href="{{ url_for('patient_appointments') }}" class="px-4 py-2 rounded-xl bg-medical-600 hover:bg-medical-700 text-white font-bold text-xs shadow transition">
+      Request Refraction Exam
+    </a>
+  </div>
+
+  <div class="space-y-6">
+    {% for rx in prescriptions %}
+      <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-lg relative overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-700">
+          <div>
+            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300">
+              Active Prescription
+            </span>
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mt-1">Eyeglass & Lens Specification</h2>
+            <p class="text-xs text-slate-500">Issued: {{ rx.created_at.strftime('%B %d, %Y') }} • Valid for 1 Year</p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <a href="{{ url_for('download_patient_report', patient_id=rx.patient.id) }}" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
+              <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print Rx Card
+            </a>
+          </div>
+        </div>
+
+        <!-- Prescription Matrix (OD & OS) -->
+        <div class="overflow-x-auto my-6">
+          <table class="w-full text-center text-xs">
+            <thead>
+              <tr class="bg-medical-50/70 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-600">
+                <th class="py-3 px-4 text-left">Eye</th>
+                <th class="py-3 px-4">Sphere (SPH)</th>
+                <th class="py-3 px-4">Cylinder (CYL)</th>
+                <th class="py-3 px-4">Axis (AX)</th>
+                <th class="py-3 px-4">Add (Near)</th>
+                <th class="py-3 px-4">Pupillary Dist. (PD)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700 font-mono font-bold text-sm">
+              <tr>
+                <td class="py-3 px-4 text-left font-sans text-xs text-slate-500">OD (Right)</td>
+                <td class="py-3 px-4 text-medical-700 dark:text-medical-300">{{ rx.od_sphere }}</td>
+                <td class="py-3 px-4 text-slate-700 dark:text-slate-300">{{ rx.od_cylinder }}</td>
+                <td class="py-3 px-4 text-slate-700 dark:text-slate-300">{{ rx.od_axis }}°</td>
+                <td class="py-3 px-4 text-slate-500">{{ rx.od_add }}</td>
+                <td class="py-3 px-4 text-slate-700 dark:text-slate-300" rowspan="2">{{ rx.pupillary_distance }}</td>
+              </tr>
+              <tr>
+                <td class="py-3 px-4 text-left font-sans text-xs text-slate-500">OS (Left)</td>
+                <td class="py-3 px-4 text-medical-700 dark:text-medical-300">{{ rx.os_sphere }}</td>
+                <td class="py-3 px-4 text-slate-700 dark:text-slate-300">{{ rx.os_cylinder }}</td>
+                <td class="py-3 px-4 text-slate-700 dark:text-slate-300">{{ rx.os_axis }}°</td>
+                <td class="py-3 px-4 text-slate-500">{{ rx.os_add }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-100 dark:border-slate-700 text-xs">
+          <div>
+            <span class="text-slate-400 font-semibold uppercase text-[10px]">Recommended Lens Coating:</span>
+            <div class="font-bold text-slate-800 dark:text-slate-200 mt-0.5">{{ rx.lens_type }}</div>
+          </div>
+          <div>
+            <span class="text-slate-400 font-semibold uppercase text-[10px]">Medications / Physician Instructions:</span>
+            <div class="font-medium text-slate-700 dark:text-slate-300 mt-0.5">{{ rx.medication_and_instructions or "None prescribed." }}</div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500">
+          <div>
+            Prescribing Doctor: <b>{{ rx.doctor.user.full_name }}</b> ({{ rx.doctor.title }})
+          </div>
+          <div class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Digital PKI Signature Verified
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="bg-white dark:bg-slate-800 rounded-3xl p-10 text-center border border-slate-200 dark:border-slate-700 text-slate-500 space-y-3">
+        <i data-lucide="glasses" class="w-12 h-12 mx-auto text-slate-400"></i>
+        <h3 class="font-bold text-base text-slate-800 dark:text-slate-200">No Optical Prescriptions on File</h3>
+        <p class="text-xs max-w-sm mx-auto">
+          Complete your Visual Acuity and Astigmatism screenings, then schedule a consultation to receive your digital prescription.
+        </p>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

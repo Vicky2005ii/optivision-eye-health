@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | OptiVision Eye Health{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-8">
+  <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200 dark:border-slate-700 shadow-xl">
+    
+    <div class="text-center mb-6">
+      <div class="w-12 h-12 rounded-2xl bg-medical-50 dark:bg-slate-700 text-medical-600 dark:text-medical-400 flex items-center justify-center mx-auto mb-3 shadow-inner">
+        <i data-lucide="lock" class="w-6 h-6"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Sign in to OptiVision</h2>
+      <p class="text-xs text-slate-500 mt-1">Access your clinical records, vision monitoring, and eye tests</p>
+    </div>
+
+    <!-- Quick Demo Logins -->
+    <div class="p-3 bg-teal-50/70 dark:bg-teal-950/30 rounded-2xl border border-teal-200 dark:border-teal-800/50 mb-6">
+      <div class="flex items-center gap-1.5 text-xs font-bold text-teal-800 dark:text-teal-300 mb-2">
+        <i data-lucide="sparkles" class="w-4 h-4 text-teal-600"></i>
+        <span>Instant 1-Click Demo Profiles</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <a href="{{ url_for('switch_user', username='doctor_vance') }}" class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-teal-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium hover:bg-teal-500 hover:text-white transition flex flex-col items-center text-center">
+          <span class="font-bold text-[11px]">Dr. Vance, MD</span>
+          <span class="text-[9px] text-slate-400">Doctor View</span>
+        </a>
+        <a href="{{ url_for('switch_user', username='patient_jane') }}" class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-teal-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium hover:bg-teal-500 hover:text-white transition flex flex-col items-center text-center">
+          <span class="font-bold text-[11px]">Jane Doe</span>
+          <span class="text-[9px] text-slate-400">Patient (Dry Eye)</span>
+        </a>
+        <a href="{{ url_for('switch_user', username='patient_robert') }}" class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-teal-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium hover:bg-teal-500 hover:text-white transition flex flex-col items-center text-center">
+          <span class="font-bold text-[11px]">Robert M.</span>
+          <span class="text-[9px] text-amber-500">AMD Anomaly</span>
+        </a>
+        <a href="{{ url_for('switch_user', username='patient_maya') }}" class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-teal-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium hover:bg-teal-500 hover:text-white transition flex flex-col items-center text-center">
+          <span class="font-bold text-[11px]">Maya Lin</span>
+          <span class="text-[9px] text-slate-400">Color Blindness</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Standard Login Form -->
+    <form method="POST" action="{{ url_for('login') }}" class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Username</label>
+        <div class="relative">
+          <input type="text" name="username" required placeholder="e.g. doctor_vance or patient_jane" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-medical-500">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+        <div class="relative">
+          <input type="password" name="password" required placeholder="Default: password123" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-medical-500">
+        </div>
+      </div>
+
+      <button type="submit" class="w-full py-3 rounded-xl bg-medical-600 hover:bg-medical-700 text-white font-semibold text-sm shadow-md shadow-medical-600/30 transition">
+        Sign In
+      </button>
+    </form>
+
+    <div class="mt-6 text-center text-xs text-slate-500">
+      Don't have an account yet? 
+      <a href="{{ url_for('register') }}" class="text-medical-600 dark:text-medical-400 font-semibold hover:underline">Create Account</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

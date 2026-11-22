@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}20-20-20 Coach & Ocular Exercises | OptiVision{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+
+  <!-- Header -->
+  <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
+    <span class="text-xs font-bold uppercase tracking-wider text-medical-600 dark:text-medical-400">Digital Wellness & Ergonomics</span>
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">20-20-20 Rule Coach & Ocular Relaxation</h1>
+    <p class="text-xs sm:text-sm text-slate-500 mt-1">
+      Relieve ciliary muscle spasm, replenish the tear film lipid layer, and prevent digital eye strain (asthenopia).
+    </p>
+  </div>
+
+  <!-- Interactive 20-20-20 Timer Card -->
+  <div class="bg-gradient-to-br from-slate-900 via-medical-950 to-slate-900 rounded-3xl p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden border border-slate-800">
+    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+      
+      <div class="space-y-4 max-w-md text-center md:text-left">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold uppercase tracking-wider">
+          <i data-lucide="timer" class="w-4 h-4 text-teal-400"></i>
+          <span>Clinical 20-20-20 Rule</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Focus Relaxation Interval</h2>
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          Every <b>20 minutes</b> of screen exposure, shift your gaze to look at an object at least <b>20 feet (6 meters)</b> away for <b>20 seconds</b>.
+        </p>
+
+        <div class="flex items-center justify-center md:justify-start gap-3 pt-2">
+          <button id="timerToggleBtn" onclick="toggleTimer()" class="px-6 py-3 rounded-2xl bg-teal-500 hover:bg-teal-600 text-white font-bold text-sm shadow-lg shadow-teal-500/30 flex items-center gap-2 transition">
+            <i data-lucide="play" class="w-4 h-4" id="timerIcon"></i>
+            <span id="timerBtnText">Start 20-Min Work Cycle</span>
+          </button>
+          <button onclick="trigger20SecRest()" class="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition">
+            Take 20s Break Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Circular Digital Countdown Clock -->
+      <div class="flex flex-col items-center justify-center">
+        <div class="relative w-44 h-44 flex items-center justify-center">
+          <svg class="w-44 h-44 transform -rotate-90">
+            <circle cx="88" cy="88" r="76" stroke="currentColor" stroke-width="8" class="text-slate-800" fill="transparent" />
+            <circle id="timerProgressRing" cx="88" cy="88" r="76" stroke="currentColor" stroke-width="8" 
+                    stroke-dasharray="477.5" 
+                    stroke-dashoffset="0" 
+                    stroke-linecap="round" 
+                    class="text-teal-400 transition-all duration-1000" 
+                    fill="transparent" />
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <span id="timerDisplay" class="text-4xl font-extrabold font-mono text-white tracking-wider">20:00</span>
+            <span id="timerPhaseLabel" class="text-[10px] font-bold uppercase tracking-wider text-teal-400 mt-1">Screen Focus</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Guided Eye Relaxation Exercises -->
+  <div class="space-y-4">
+    <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">Guided Ophthalmic Exercises</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Exercise 1: Mindful Blinking -->
+      <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+        <div class="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center font-bold">
+          <i data-lucide="droplets" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">1. Full Blink Training</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Screen users blink 66% less often. Close eyes gently for 2 seconds, pause, squeeze tight for 2 seconds, then release. Repeat 10 times to re-coat the cornea with tear lipids.
+        </p>
+      </div>
+
+      <!-- Exercise 2: Near-Far Focus Shifting -->
+      <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+        <div class="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center font-bold">
+          <i data-lucide="eye" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">2. Near-to-Far Accommodation</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Hold your thumb 10 inches from your nose. Focus on it for 5 seconds. Then shift focus to an object across the room (20+ feet away) for 5 seconds. Repeat 5 times to loosen ciliary spasm.
+        </p>
+      </div>
+
+      <!-- Exercise 3: Palming Warmth -->
+      <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+        <div class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center font-bold">
+          <i data-lucide="sun" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100">3. Warm Palming Technique</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Rub palms together briskly until warm. Cup your palms gently over closed eyes without putting pressure on the eyeballs. Breathe deeply in total darkness for 60 seconds.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let timerInterval = null;
+  let isRunning = false;
+  let remainingSeconds = 20 * 60; // 20 mins
+  let isBreakPhase = false;
+  const circumference = 2 * Math.PI * 76; // ~477.5
+
+  function updateTimerUI() {
+    const m = Math.floor(remainingSeconds / 60);
+    const s = remainingSeconds % 60;
+    document.getElementById('timerDisplay').innerText = 
+      `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    
+    const totalPhaseSeconds = isBreakPhase ? 20 : (20 * 60);
+    const fraction = (totalPhaseSeconds - remainingSeconds) / totalPhaseSeconds;
+    const offset = circumference * (1 - fraction);
+    document.getElementById('timerProgressRing').style.strokeDashoffset = offset;
+  }
+
+  function toggleTimer() {
+    if (isRunning) {
+      clearInterval(timerInterval);
+      isRunning = false;
+      document.getElementById('timerBtnText').innerText = 'Resume Work Timer';
+      document.getElementById('timerIcon').setAttribute('data-lucide', 'play');
+    } else {
+      isRunning = true;
+      document.getElementById('timerBtnText').innerText = 'Pause Timer';
+      document.getElementById('timerIcon').setAttribute('data-lucide', 'pause');
+      timerInterval = setInterval(() => {
+        remainingSeconds--;
+        if (remainingSeconds <= 0) {
+          if (!isBreakPhase) {
+            trigger20SecRest();
+          } else {
+            // End of break, resume work cycle
+            playChime();
+            isBreakPhase = false;
+            remainingSeconds = 20 * 60;
+            document.getElementById('timerPhaseLabel').innerText = 'Screen Focus';
+            document.getElementById('timerProgressRing').classList.remove('text-amber-400');
+            document.getElementById('timerProgressRing').classList.add('text-teal-400');
+            alert('20-second ocular rest complete! Resuming work cycle.');
+          }
+        }
+        updateTimerUI();
+      }, 1000);
+    }
+    lucide.createIcons();
+  }
+
+  function trigger20SecRest() {
+    playChime();
+    isBreakPhase = true;
+    remainingSeconds = 20;
+    document.getElementById('timerPhaseLabel').innerText = 'Look 20 Ft Away!';
+    document.getElementById('timerProgressRing').classList.remove('text-teal-400');
+    document.getElementById('timerProgressRing').classList.add('text-amber-400');
+    updateTimerUI();
+    if (!isRunning) toggleTimer();
+  }
+
+  function playChime() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.2);
+    } catch(e) {}
+  }
+
+  updateTimerUI();
+</script>
+{% endblock %}

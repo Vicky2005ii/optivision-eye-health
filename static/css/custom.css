@@ -1,0 +1,46 @@
+/* OptiVision Clinical Custom Styling */
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.03); }
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+/* Crisp rendering for HTML5 Canvas optotypes */
+canvas {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* High contrast accessibility override */
+body.high-contrast {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+body.high-contrast .bg-white,
+body.high-contrast .bg-slate-50,
+body.high-contrast .bg-slate-100 {
+  background-color: #0A0A0A !important;
+  border-color: #404040 !important;
+  color: #FFFFFF !important;
+}
+
+body.high-contrast text,
+body.high-contrast p,
+body.high-contrast span,
+body.high-contrast h1,
+body.high-contrast h2,
+body.high-contrast h3 {
+  color: #FFFFFF !important;
+}
+
+body.high-contrast a {
+  color: #38BDF8 !important;
+  text-decoration: underline !important;
+}

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Dry Eye & CVS Assessment (OSDI) | OptiVision{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+  <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">
+    <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700">
+      <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xl">
+        <i data-lucide="droplet" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Dry Eye & Computer Vision (OSDI)</h1>
+        <p class="text-xs text-slate-500">Standardized 12-Item Ocular Surface Disease Index (0–100 Scale)</p>
+      </div>
+    </div>
+
+    <div class="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-800/40 text-xs text-slate-600 dark:text-slate-300">
+      Please select how frequently you have experienced each symptom over the <b>past week</b>.
+      (0 = None of the time, 1 = Some of the time, 2 = Half of the time, 3 = Most of the time, 4 = All of the time).
+    </div>
+
+    <form id="osdiForm" onsubmit="calculateOSDI(event)" class="space-y-8">
+      
+      <!-- Sub-section A: Ocular Symptoms -->
+      <div class="space-y-4">
+        <h3 class="font-bold text-sm text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-4 h-4"></i> Section A: Visual Symptoms
+        </h3>
+
+        <div class="space-y-3">
+          {% set q_a = [
+            ("q1", "Eyes that are sensitive to light / glare?"),
+            ("q2", "Eyes that feel gritty or like sand is in them?"),
+            ("q3", "Painful or sore eyes?"),
+            ("q4", "Blurred or fluctuating vision while working?"),
+            ("q5", "Poor or degraded vision at the end of the day?")
+          ] %}
+          {% for id, text in q_a %}
+            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200/60 dark:border-slate-600/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <span class="font-medium text-slate-800 dark:text-slate-200">{{ text }}</span>
+              <div class="flex items-center gap-1.5 shrink-0">
+                {% for val in [0, 1, 2, 3, 4] %}
+                  <label class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 cursor-pointer text-center text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-slate-600 has-[:checked]:bg-indigo-600 has-[:checked]:text-white has-[:checked]:border-indigo-600 transition">
+                    <input type="radio" name="{{ id }}" value="{{ val }}" {% if val == 0 %}checked{% endif %} class="hidden">
+                    {{ val }}
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Sub-section B: Vision-Related Tasks -->
+      <div class="space-y-4">
+        <h3 class="font-bold text-sm text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="monitor" class="w-4 h-4"></i> Section B: Limitations in Daily Tasks
+        </h3>
+
+        <div class="space-y-3">
+          {% set q_b = [
+            ("q6", "Reading books, documents, or small text?"),
+            ("q7", "Driving at night or encountering glare?"),
+            ("q8", "Working with a computer, tablet, or smartphone?"),
+            ("q9", "Watching TV or digital displays?")
+          ] %}
+          {% for id, text in q_b %}
+            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200/60 dark:border-slate-600/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <span class="font-medium text-slate-800 dark:text-slate-200">{{ text }}</span>
+              <div class="flex items-center gap-1.5 shrink-0">
+                {% for val in [0, 1, 2, 3, 4] %}
+                  <label class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 cursor-pointer text-center text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-slate-600 has-[:checked]:bg-indigo-600 has-[:checked]:text-white has-[:checked]:border-indigo-600 transition">
+                    <input type="radio" name="{{ id }}" value="{{ val }}" {% if val == 0 %}checked{% endif %} class="hidden">
+                    {{ val }}
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Sub-section C: Environmental Triggers -->
+      <div class="space-y-4">
+        <h3 class="font-bold text-sm text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="wind" class="w-4 h-4"></i> Section C: Environmental Sensitivity
+        </h3>
+
+        <div class="space-y-3">
+          {% set q_c = [
+            ("q10", "Windy outdoor conditions?"),
+            ("q11", "Places with low humidity / dry air?"),
+            ("q12", "Areas with intense air conditioning or heating vents?")
+          ] %}
+          {% for id, text in q_c %}
+            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200/60 dark:border-slate-600/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <span class="font-medium text-slate-800 dark:text-slate-200">{{ text }}</span>
+              <div class="flex items-center gap-1.5 shrink-0">
+                {% for val in [0, 1, 2, 3, 4] %}
+                  <label class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 cursor-pointer text-center text-xs font-semibold hover:bg-indigo-50 dark:hover:bg-slate-600 has-[:checked]:bg-indigo-600 has-[:checked]:text-white has-[:checked]:border-indigo-600 transition">
+                    <input type="radio" name="{{ id }}" value="{{ val }}" {% if val == 0 %}checked{% endif %} class="hidden">
+                    {{ val }}
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <button type="submit" class="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition">
+        <i data-lucide="check-circle" class="w-4 h-4"></i>
+        <span>Calculate OSDI Score & Save Assessment</span>
+      </button>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function calculateOSDI(e) {
+    e.preventDefault();
+    const form = document.getElementById('osdiForm');
+    const formData = new FormData(form);
+
+    let sum = 0;
+    let count = 0;
+    const answers = {};
+
+    for (let i = 1; i <= 12; i++) {
+      const val = parseInt(formData.get('q' + i) || '0');
+      sum += val;
+      count++;
+      answers['q' + i] = val;
+    }
+
+    // OSDI formula: (sum * 25) / count
+    const osdiScore = parseFloat(((sum * 25) / count).toFixed(1));
+
+    let severity = 'normal';
+    let label = 'Normal Ocular Surface (0 - 12)';
+    if (osdiScore >= 33) {
+      severity = 'severe';
+      label = 'Severe Dry Eye Disease / High CVS (33 - 100)';
+    } else if (osdiScore >= 23) {
+      severity = 'moderate';
+      label = 'Moderate Dry Eye Disease (23 - 32)';
+    } else if (osdiScore >= 13) {
+      severity = 'mild';
+      label = 'Mild Dry Eye Disease (13 - 22)';
+    }
+
+    const payload = {
+      test_type: 'dry_eye_cvs',
+      eye_tested: 'OU',
+      primary_score: `OSDI Score: ${osdiScore} / 100`,
+      secondary_score: label,
+      numerical_metric: osdiScore,
+      severity: severity,
+      distance_cm: 60.0,
+      test_data: {
+        osdi_score: osdiScore,
+        severity_classification: label,
+        answers: answers
+      },
+      patient_notes: `OSDI Survey Score: ${osdiScore} (${label}).`
+    };
+
+    fetch('/api/save-test-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      window.location.href = '/patient/dashboard';
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnostic Eye Testing Center | OptiVision{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+  
+  <!-- Header Banner -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-700">
+    <div>
+      <span class="text-xs font-bold uppercase tracking-wider text-medical-600 dark:text-medical-400">Clinical Battery</span>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">Interactive Eye Testing Center</h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1">
+        Calibrated tests designed in accordance with ISO 8596 ophthalmic visual acuity and clinical retinal screening standards.
+      </p>
+    </div>
+
+    <!-- Calibration Button -->
+    <div class="flex items-center gap-3">
+      <button onclick="openCalibrationModal()" class="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-medical-500 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-sm flex items-center gap-2 transition">
+        <i data-lucide="ruler" class="w-4 h-4 text-amber-500"></i>
+        <span>Calibrate Display (Screen PPI)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Testing Protocol Pre-Flight Notice -->
+  <div class="bg-blue-50/70 dark:bg-slate-800/80 rounded-2xl p-4 border border-blue-200/80 dark:border-slate-700 flex items-start gap-3 text-xs text-slate-600 dark:text-slate-300">
+    <i data-lucide="info" class="w-5 h-5 text-medical-600 shrink-0 mt-0.5"></i>
+    <div>
+      <b class="text-slate-900 dark:text-white font-semibold">Testing Recommendations:</b>
+      Ensure your screen brightness is at ~80%, avoid glare from windows or lamps, wear your everyday distance correction (glasses/contacts) if testing aided acuity, and calibrate your screen size using a standard card for precise letter sizing.
+    </div>
+  </div>
+
+  <!-- Grid of 6 Tests -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+    <!-- 1. Visual Acuity (Snellen & Tumbling E) -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-lg">
+            <i data-lucide="eye" class="w-6 h-6"></i>
+          </div>
+          <span class="text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+            Snellen / E-Chart
+          </span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Visual Acuity Screening</h3>
+        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+          Determines central vision clarity (from 20/200 down to 20/15). Supports monocular isolation (OD / OS), millimetric distance scaling (1m, 2m, 3m), and vocal response prompts.
+        </p>
+        <div class="space-y-1 text-[11px] text-slate-600 dark:text-slate-400 mb-6 border-t border-slate-100 dark:border-slate-700/60 pt-3">
+          <div class="flex justify-between"><span>Duration:</span> <b>3 - 5 mins</b></div>
+          <div class="flex justify-between"><span>Standard:</span> <b>5 arcmin Snellen</b></div>
+          <div class="flex justify-between"><span>Distance:</span> <b>1 to 3 Meters</b></div>
+        </div>
+      </div>
+      <a href="{{ url_for('patient_take_test', test_name='acuity') }}" class="w-full py-2.5 rounded-xl bg-medical-600 hover:bg-medical-700 text-white font-semibold text-xs text-center shadow-md transition flex items-center justify-center gap-1.5">
+        <i data-lucide="play" class="w-3.5 h-3.5"></i> Start Acuity Test
+      </a>
+    </div>
+
+    <!-- 2. Ishihara Color Blindness -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-lg">
+            <i data-lucide="palette" class="w-6 h-6"></i>
+          </div>
+          <span class="text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300">
+            14 Color Plates
+          </span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Ishihara Color Deficiency</h3>
+        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+          Clinical pseudoisochromatic plates to screen and classify congenital or acquired color vision deficiencies, including red-green (protan / deutan) and tritan defects.
+        </p>
+        <div class="space-y-1 text-[11px] text-slate-600 dark:text-slate-400 mb-6 border-t border-slate-100 dark:border-slate-700/60 pt-3">
+          <div class="flex justify-between"><span>Duration:</span> <b>2 - 3 mins</b></div>
+          <div class="flex justify-between"><span>Classification:</span> <b>Protan / Deutan</b></div>
+          <div class="flex justify-between"><span>Distance:</span> <b>50 - 60 cm (Arm length)</b></div>
+        </div>
+      </div>
+      <a href="{{ url_for('patient_take_test', test_name='color') }}" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs text-center shadow-md transition flex items-center justify-center gap-1.5">
+        <i data-lucide="play" class="w-3.5 h-3.5"></i> Start Color Test
+      </a>
+    </div>
+
+    <!-- 3. Astigmatism Clock Dial -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-lg">
+            <i data-lucide="compass" class="w-6 h-6"></i>
+          </div>
+          <span class="text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+            Clock Dial & Fan
+          </span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Astigmatism Dial Test</h3>
+        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+          High-resolution 360-degree radial line pattern. Unequal sharp lines indicate refractive cylinder and principal meridian axis (e.g. 90° vs 180°).
+        </p>
+        <div class="space-y-1 text-[11px] text-slate-600 dark:text-slate-400 mb-6 border-t border-slate-100 dark:border-slate-700/60 pt-3">
+          <div class="flex justify-between"><span>Duration:</span> <b>2 mins</b></div>
+          <div class="flex justify-between"><span>Target:</span> <b>Corneal Asymmetry</b></div>
+          <div class="flex justify-between"><span>Distance:</span> <b>60 - 80 cm</b></div>
+        </div>
+      </div>
+      <a href="{{ url_for('patient_take_test', test_name='astigmatism') }}" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs text-center shadow-md transition flex items-center justify-center gap-1.5">
+        <i data-lucide="play" class="w-3.5 h-3.5"></i> Start Astigmatism Test
+      </a>
+    </div>
+
+    <!-- 4. Contrast Sensitivity -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-lg">
+            <i data-lucide="sun-medium" class="w-6 h-6"></i>
+          </div>
+          <span class="text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300">
+            Pelli-Robson Scale
+          </span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Contrast Sensitivity</h3>
+        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+          Measures your ability to distinguish faint objects against low-contrast backgrounds. Serves as an early diagnostic marker for glaucoma and cataracts.
+        </p>
+        <div class="space-y-1 text-[11px] text-slate-600 dark:text-slate-400 mb-6 border-t border-slate-100 dark:border-slate-700/60 pt-3">
+          <div class="flex justify-between"><span>Duration:</span> <b>3 mins</b></div>
+          <div class="flex justify-between"><span>Range:</span> <b>100% to 1.5% Contrast</b></div>
+          <div class="flex justify-between"><span>Distance:</span> <b>1 Meter</b></div>
+        </div>
+      </div>
+      <a href="{{ url_for('patient_take_test', test_name='contrast') }}" class="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs text-center shadow-md transition flex items-center justify-center gap-1.5">
+        <i data-lucide="play" class="w-3.5 h-3.5"></i> Start Contrast Test
+      </a>
+    </div>
+
+    <!-- 5. Amsler Grid Macular Health -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-lg">
+            <i data-lucide="grid" class="w-6 h-6"></i>
+          </div>
+          <span class="text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300">
+            Retina / AMD
+          </span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Amsler Grid Macular Map</h3>
+        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+          Evaluates central 10° of visual field. Features interactive digital canvas tool allowing patients to mark scotomas (blind spots) or wavy distorted lines (metamorphopsia).
+        </p>
+        <div class="space-y-1 text-[11px] text-slate-600 dark:text-slate-400 mb-6 border-t border-slate-100 dark:border-slate-700/60 pt-3">
+          <div class="flex justify-between"><span>Duration:</span> <b>2 - 3 mins</b></div>
+          <div class="flex justify-between"><span>Marker:</span> <b>Interactive Scotoma Pen</b></div>
+          <div class="flex justify-between"><span>Distance:</span> <b>35 cm (Reading dist.)</b></div>
+        </div>
+      </div>
+      <a href="{{ url_for('patient_take_test', test_name='amsler') }}" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs text-center shadow-md transition flex items-center justify-center gap-1.5">
+        <i data-lucide="play" class="w-3.5 h-3.5"></i> Start Amsler Test
+      </a>
+    </div>
+
+    <!-- 6. Dry Eye & Computer Vision Syndrome (OSDI) -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg">
+            <i data-lucide="monitor" class="w-6 h-6"></i>
+          </div>
+          <span class="text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300">
+            Clinical OSDI
+          </span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Dry Eye & CVS Assessment</h3>
+        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+          Validated 12-item clinical OSDI survey measuring ocular surface symptoms, environmental triggers (wind, AC), and digital screen fatigue with automated severity grading.
+        </p>
+        <div class="space-y-1 text-[11px] text-slate-600 dark:text-slate-400 mb-6 border-t border-slate-100 dark:border-slate-700/60 pt-3">
+          <div class="flex justify-between"><span>Duration:</span> <b>2 mins</b></div>
+          <div class="flex justify-between"><span>Score:</span> <b>0 - 100 Index</b></div>
+          <div class="flex justify-between"><span>Categories:</span> <b>Normal, Mild, Mod, Severe</b></div>
+        </div>
+      </div>
+      <a href="{{ url_for('patient_take_test', test_name='dryeye') }}" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs text-center shadow-md transition flex items-center justify-center gap-1.5">
+        <i data-lucide="play" class="w-3.5 h-3.5"></i> Start Dry Eye Survey
+      </a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

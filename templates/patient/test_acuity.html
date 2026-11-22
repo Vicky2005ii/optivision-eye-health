@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+
+{% block title %}Visual Acuity Test | OptiVision{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <!-- Setup & Instructions Card -->
+  <div id="testSetupCard" class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xl">
+          <i data-lucide="eye" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Visual Acuity Screening</h1>
+          <p class="text-xs text-slate-500">Snellen & Tumbling E 5-Arcminute Optical Test</p>
+        </div>
+      </div>
+      <button onclick="openCalibrationModal()" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-medical-500 text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+        <i data-lucide="ruler" class="w-3.5 h-3.5 text-amber-500"></i> Calibrate Display
+      </button>
+    </div>
+
+    <!-- Parameter Config: Eye, Distance, Mode -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      
+      <!-- Eye Selection -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Eye Being Tested</label>
+        <div class="grid grid-cols-3 gap-2 text-xs">
+          <button type="button" onclick="selectEye('OD', this)" class="eye-btn py-2.5 rounded-xl border-2 border-medical-500 bg-medical-50 text-medical-800 dark:bg-medical-950/40 dark:text-medical-200 font-bold text-center">
+            OD (Right)
+          </button>
+          <button type="button" onclick="selectEye('OS', this)" class="eye-btn py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-50">
+            OS (Left)
+          </button>
+          <button type="button" onclick="selectEye('OU', this)" class="eye-btn py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-50">
+            OU (Both)
+          </button>
+        </div>
+      </div>
+
+      <!-- Distance Selection -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Viewing Distance</label>
+        <select id="distanceSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-medical-500">
+          <option value="100">1.0 Meter (~3.3 Feet) - Standard Desk</option>
+          <option value="150">1.5 Meters (~5 Feet)</option>
+          <option value="200">2.0 Meters (~6.6 Feet) - Recommended</option>
+          <option value="300">3.0 Meters (~10 Feet) - Extended Room</option>
+          <option value="40">40 cm (16 Inches) - Near Vision Reading</option>
+        </select>
+      </div>
+
+      <!-- Optotype Style -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Optotype Style</label>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button type="button" onclick="selectType('tumbling_e', this)" class="type-btn py-2.5 rounded-xl border-2 border-medical-500 bg-medical-50 text-medical-800 dark:bg-medical-950/40 dark:text-medical-200 font-bold text-center">
+            Tumbling E
+          </button>
+          <button type="button" onclick="selectType('snellen', this)" class="type-btn py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-50">
+            Letters
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Instructions Banner -->
+    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200/80 dark:border-slate-600/60 text-xs text-slate-600 dark:text-slate-300 space-y-2">
+      <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> Step-by-Step Instructions:
+      </div>
+      <ul class="list-disc list-inside space-y-1 text-[11px] leading-relaxed">
+        <li>Sit back at the selected distance (e.g. 1 meter or 2 meters).</li>
+        <li>Cover the non-tested eye gently with your palm (do not press on your eyeball).</li>
+        <li>If testing with Tumbling E: Identify which direction the prongs point (<b>Up, Down, Left, or Right</b>) using keyboard arrow keys or on-screen buttons.</li>
+        <li>Letters will progressively shrink to calculate your LogMAR resolution threshold.</li>
+      </ul>
+      <div class="flex items-center gap-2 pt-1 text-slate-700 dark:text-slate-200 font-medium">
+        <input type="checkbox" id="voiceGuideCheck" checked class="rounded text-medical-600">
+        <label for="voiceGuideCheck" class="cursor-pointer">Enable Voice Synthesizer (Reads directions aloud for testing from distance)</label>
+      </div>
+    </div>
+
+    <button onclick="startAcuityTest()" class="w-full py-3.5 rounded-2xl bg-medical-600 hover:bg-medical-700 text-white font-bold text-sm shadow-lg shadow-medical-600/30 flex items-center justify-center gap-2 transition">
+      <i data-lucide="play" class="w-4 h-4"></i>
+      <span>Begin Visual Acuity Test</span>
+    </button>
+  </div>
+
+  <!-- Live Test View (Hidden initially) -->
+  <div id="liveTestCard" class="hidden bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">
+    
+    <!-- Header Progress Info -->
+    <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 text-xs">
+      <div class="flex items-center gap-3">
+        <span class="px-2.5 py-1 rounded-lg bg-medical-100 dark:bg-medical-900/60 text-medical-700 dark:text-medical-300 font-bold font-mono" id="liveEyeLabel">OD (Right Eye)</span>
+        <span class="text-slate-400">|</span>
+        <span class="text-slate-600 dark:text-slate-300">Level: <b id="liveLevelLabel">1 of 9 (20/200)</b></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-slate-400">Score:</span>
+        <span id="liveScoreLabel" class="font-bold text-emerald-600 font-mono text-sm">0 / 0</span>
+        <button onclick="cancelTest()" class="ml-4 text-slate-400 hover:text-rose-500 font-medium">Exit Test</button>
+      </div>
+    </div>
+
+    <!-- Optotype Display Area (Center Stage) -->
+    <div class="min-h-[280px] sm:min-h-[340px] flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900/70 rounded-2xl border border-slate-200 dark:border-slate-700 relative overflow-hidden select-none">
+      
+      <!-- Visual Acuity Optotype Letter / E -->
+      <div id="optotypeContainer" class="flex items-center justify-center transition-all duration-150">
+        <span id="optotypeElement" class="snellen-letter text-slate-950 dark:text-white transition-transform duration-100 inline-block">E</span>
+      </div>
+
+      <div class="absolute bottom-3 text-[10px] text-slate-400 font-mono" id="optotypeSizeInfo">
+        Height: 48mm • Equivalent: 20/200 • LogMAR 1.0
+      </div>
+    </div>
+
+    <!-- Response Controls -->
+    <!-- Tumbling E Controls (Directional Arrows) -->
+    <div id="tumblingControls" class="space-y-4">
+      <div class="text-center text-xs font-semibold text-slate-500">
+        Which direction is the E pointing? (Use Keyboard Arrow Keys or Buttons)
+      </div>
+
+      <div class="flex justify-center">
+        <div class="grid grid-cols-3 gap-3 w-64">
+          <div></div>
+          <button onclick="submitAnswer('up')" class="p-4 bg-slate-100 dark:bg-slate-700 hover:bg-medical-50 dark:hover:bg-slate-600 text-slate-800 dark:text-white rounded-2xl flex flex-col items-center justify-center shadow-sm active:scale-95 transition">
+            <i data-lucide="arrow-up" class="w-6 h-6 text-medical-600 dark:text-medical-400"></i>
+            <span class="text-[10px] font-bold mt-1">UP (↑)</span>
+          </button>
+          <div></div>
+
+          <button onclick="submitAnswer('left')" class="p-4 bg-slate-100 dark:bg-slate-700 hover:bg-medical-50 dark:hover:bg-slate-600 text-slate-800 dark:text-white rounded-2xl flex flex-col items-center justify-center shadow-sm active:scale-95 transition">
+            <i data-lucide="arrow-left" class="w-6 h-6 text-medical-600 dark:text-medical-400"></i>
+            <span class="text-[10px] font-bold mt-1">LEFT (←)</span>
+          </button>
+          <div class="flex items-center justify-center">
+            <span class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+          </div>
+          <button onclick="submitAnswer('right')" class="p-4 bg-slate-100 dark:bg-slate-700 hover:bg-medical-50 dark:hover:bg-slate-600 text-slate-800 dark:text-white rounded-2xl flex flex-col items-center justify-center shadow-sm active:scale-95 transition">
+            <i data-lucide="arrow-right" class="w-6 h-6 text-medical-600 dark:text-medical-400"></i>
+            <span class="text-[10px] font-bold mt-1">RIGHT (→)</span>
+          </button>
+
+          <div></div>
+          <button onclick="submitAnswer('down')" class="p-4 bg-slate-100 dark:bg-slate-700 hover:bg-medical-50 dark:hover:bg-slate-600 text-slate-800 dark:text-white rounded-2xl flex flex-col items-center justify-center shadow-sm active:scale-95 transition">
+            <i data-lucide="arrow-down" class="w-6 h-6 text-medical-600 dark:text-medical-400"></i>
+            <span class="text-[10px] font-bold mt-1">DOWN (↓)</span>
+          </button>
+          <div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Letter Snellen Controls (Letter Keypad) -->
+    <div id="snellenControls" class="hidden space-y-4">
+      <div class="text-center text-xs font-semibold text-slate-500">
+        Identify the letter shown on screen:
+      </div>
+      <div class="flex flex-wrap justify-center gap-2 max-w-md mx-auto" id="letterKeypad">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let selectedEye = 'OD';
+  let selectedOptotypeType = 'tumbling_e';
+  let viewingDistanceCm = 100;
+  let screenPPI = parseFloat(localStorage.getItem('screen_ppi') || '96');
+  let voiceEnabled = true;
+
+  // Snellen acuity levels (Snellen fraction, LogMAR, angular height in mm at 100cm)
+  // Standard: 20/20 letter subtends 5 arcminutes = 1.454 mm at 100cm
+  const ACUITY_LEVELS = [
+    { snellen: "20/200", logmar: 1.0,  relativeScale: 10.0, label: "20/200 (6/60)" },
+    { snellen: "20/100", logmar: 0.7,  relativeScale: 5.0,  label: "20/100 (6/30)" },
+    { snellen: "20/70",  logmar: 0.54, relativeScale: 3.5,  label: "20/70 (6/21)" },
+    { snellen: "20/50",  logmar: 0.4,  relativeScale: 2.5,  label: "20/50 (6/15)" },
+    { snellen: "20/40",  logmar: 0.3,  relativeScale: 2.0,  label: "20/40 (6/12)" },
+    { snellen: "20/30",  logmar: 0.18, relativeScale: 1.5,  label: "20/30 (6/9)" },
+    { snellen: "20/25",  logmar: 0.1,  relativeScale: 1.25, label: "20/25 (6/7.5)" },
+    { snellen: "20/20",  logmar: 0.0,  relativeScale: 1.0,  label: "20/20 (6/6) Normal" },
+    { snellen: "20/15",  logmar: -0.12,relativeScale: 0.75, label: "20/15 (6/4.5) Superior" }
+  ];
+
+  const SNELLEN_LETTERS = ['C', 'D', 'E', 'F', 'H', 'K', 'N', 'O', 'P', 'R', 'S', 'T', 'Z'];
+  const DIRECTIONS = ['up', 'down', 'left', 'right'];
+
+  let currentLevelIdx = 0;
+  let trialsInCurrentLevel = 0;
+  let correctInCurrentLevel = 0;
+  let totalCorrect = 0;
+  let totalTrials = 0;
+  let targetSolution = '';
+  let bestAcuityReached = "20/200";
+  let bestLogmarReached = 1.0;
+
+  function selectEye(eye, btn) {
+    selectedEye = eye;
+    document.querySelectorAll('.eye-btn').forEach(b => {
+      b.className = 'eye-btn py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-50';
+    });
+    btn.className = 'eye-btn py-2.5 rounded-xl border-2 border-medical-500 bg-medical-50 text-medical-800 dark:bg-medical-950/40 dark:text-medical-200 font-bold text-center';
+  }
+
+  function selectType(type, btn) {
+    selectedOptotypeType = type;
+    document.querySelectorAll('.type-btn').forEach(b => {
+      b.className = 'type-btn py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-center hover:bg-slate-50';
+    });
+    btn.className = 'type-btn py-2.5 rounded-xl border-2 border-medical-500 bg-medical-50 text-medical-800 dark:bg-medical-950/40 dark:text-medical-200 font-bold text-center';
+  }
+
+  function startAcuityTest() {
+    viewingDistanceCm = parseFloat(document.getElementById('distanceSelect').value);
+    voiceEnabled = document.getElementById('voiceGuideCheck').checked;
+    screenPPI = parseFloat(localStorage.getItem('screen_ppi') || '96');
+
+    document.getElementById('testSetupCard').classList.add('hidden');
+    document.getElementById('liveTestCard').classList.remove('hidden');
+
+    document.getElementById('liveEyeLabel').innerText = (selectedEye === 'OD' ? 'OD (Right Eye)' : (selectedEye === 'OS' ? 'OS (Left Eye)' : 'OU (Both Eyes)'));
+
+    if (selectedOptotypeType === 'tumbling_e') {
+      document.getElementById('tumblingControls').classList.remove('hidden');
+      document.getElementById('snellenControls').classList.add('hidden');
+    } else {
+      document.getElementById('tumblingControls').classList.add('hidden');
+      document.getElementById('snellenControls').classList.remove('hidden');
+      buildLetterKeypad();
+    }
+
+    currentLevelIdx = 0;
+    trialsInCurrentLevel = 0;
+    correctInCurrentLevel = 0;
+    totalCorrect = 0;
+    totalTrials = 0;
+    bestAcuityReached = "< 20/200";
+    bestLogmarReached = 1.0;
+
+    speak("Beginning test for " + (selectedEye === 'OD' ? 'Right Eye' : (selectedEye === 'OS' ? 'Left Eye' : 'Both Eyes')));
+    nextTrial();
+  }
+
+  function buildLetterKeypad() {
+    const pad = document.getElementById('letterKeypad');
+    pad.innerHTML = '';
+    SNELLEN_LETTERS.forEach(char => {
+      const b = document.createElement('button');
+      b.className = 'w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-medical-600 hover:text-white font-bold text-sm text-slate-800 dark:text-white transition shadow-sm';
+      b.innerText = char;
+      b.onclick = () => submitAnswer(char);
+      pad.appendChild(b);
+    });
+  }
+
+  function nextTrial() {
+    const level = ACUITY_LEVELS[currentLevelIdx];
+    document.getElementById('liveLevelLabel').innerText = `${currentLevelIdx + 1} of ${ACUITY_LEVELS.length} (${level.snellen})`;
+    document.getElementById('liveScoreLabel').innerText = `${totalCorrect} / ${totalTrials}`;
+
+    // Calculate physical millimetric size for optotype:
+    // 5 arcminutes visual angle: h_mm = 2 * (d_mm) * tan(5 / 120 * pi / 180) * relativeScale
+    // At 1000mm distance: 20/20 letter height is ~1.454 mm
+    const baseHeightMm = 1.454 * (viewingDistanceCm / 100.0);
+    const heightMm = baseHeightMm * level.relativeScale;
+    // Convert mm to pixels using Screen PPI: (mm / 25.4) * PPI
+    const heightPx = Math.max(12, Math.round((heightMm / 25.4) * screenPPI));
+
+    const opto = document.getElementById('optotypeElement');
+    opto.style.fontSize = heightPx + 'px';
+    opto.style.lineHeight = heightPx + 'px';
+
+    document.getElementById('optotypeSizeInfo').innerText = `Height: ${heightMm.toFixed(1)}mm (${heightPx}px) • Target: ${level.label} • Distance: ${viewingDistanceCm}cm`;
+
+    if (selectedOptotypeType === 'tumbling_e') {
+      opto.innerText = 'E';
+      const dir = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
+      targetSolution = dir;
+      if (dir === 'up') opto.style.transform = 'rotate(-90deg)';
+      else if (dir === 'down') opto.style.transform = 'rotate(90deg)';
+      else if (dir === 'left') opto.style.transform = 'rotate(180deg)';
+      else opto.style.transform = 'rotate(0deg)';
+    } else {
+      opto.style.transform = 'rotate(0deg)';
+      const char = SNELLEN_LETTERS[Math.floor(Math.random() * SNELLEN_LETTERS.length)];
+      targetSolution = char;
+      opto.innerText = char;
+    }
+  }
+
+  function submitAnswer(ans) {
+    totalTrials++;
+    trialsInCurrentLevel++;
+    const isCorrect = (ans.toLowerCase() === targetSolution.toLowerCase());
+    if (isCorrect) {
+      correctInCurrentLevel++;
+      totalCorrect++;
+    }
+
+    // Check if level finished (2 trials per level for speed, or 3)
+    if (trialsInCurrentLevel >= 2) {
+      if (correctInCurrentLevel >= 2) {
+        // Passed this level!
+        bestAcuityReached = ACUITY_LEVELS[currentLevelIdx].snellen;
+        bestLogmarReached = ACUITY_LEVELS[currentLevelIdx].logmar;
+        currentLevelIdx++;
+
+        if (currentLevelIdx < ACUITY_LEVELS.length) {
+          trialsInCurrentLevel = 0;
+          correctInCurrentLevel = 0;
+          nextTrial();
+        } else {
+          finishTest();
+        }
+      } else {
+        // Failed this acuity threshold
+        finishTest();
+      }
+    } else {
+      nextTrial();
+    }
+  }
+
+  function finishTest() {
+    speak("Visual Acuity test complete. Your visual acuity is " + bestAcuityReached);
+
+    let severity = 'normal';
+    if (bestLogmarReached >= 0.5) severity = 'severe';
+    else if (bestLogmarReached >= 0.3) severity = 'moderate';
+    else if (bestLogmarReached >= 0.1) severity = 'mild';
+
+    const payload = {
+      test_type: 'visual_acuity',
+      eye_tested: selectedEye,
+      primary_score: bestAcuityReached,
+      secondary_score: `LogMAR ${bestLogmarReached.toFixed(2)}`,
+      numerical_metric: bestLogmarReached,
+      severity: severity,
+      distance_cm: viewingDistanceCm,
+      screen_calibration_ppi: screenPPI,
+      test_data: {
+        totalCorrect: totalCorrect,
+        totalTrials: totalTrials,
+        optotype: selectedOptotypeType,
+        levelsReached: currentLevelIdx
+      },
+      patient_notes: `Tested ${selectedEye} at ${viewingDistanceCm}cm distance. Optotype: ${selectedOptotypeType}.`
+    };
+
+    fetch('/api/save-test-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Test recorded locally: ' + bestAcuityReached);
+      window.location.href = '/patient/dashboard';
+    });
+  }
+
+  function cancelTest() {
+    if (confirm('Exit visual acuity test? Progress will not be saved.')) {
+      window.location.href = '/patient/tests';
+    }
+  }
+
+  function speak(text) {
+    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.0;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    } catch(e) {}
+  }
+
+  // Keyboard navigation for arrow keys
+  window.addEventListener('keydown', (e) => {
+    if (document.getElementById('liveTestCard').classList.contains('hidden')) return;
+    if (selectedOptotypeType === 'tumbling_e') {
+      if (e.key === 'ArrowUp') { e.preventDefault(); submitAnswer('up'); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); submitAnswer('down'); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); submitAnswer('left'); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); submitAnswer('right'); }
+    }
+  });
+</script>
+{% endblock %}

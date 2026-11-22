@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Vision Dashboard | OptiVision{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+  
+  <!-- Welcome Banner & Health Score -->
+  <div class="bg-gradient-to-r from-medical-900 via-medical-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+    <div class="absolute right-0 top-0 translate-x-12 -translate-y-8 w-72 h-72 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div class="space-y-2 max-w-xl">
+        <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-medical-700/60 text-medical-200 text-xs font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>Patient Portal • ID: PT-{{ "%04d" % profile.id }}</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          Welcome back, {{ current_user.full_name }}
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          Your ocular parameters are calibrated. Maintain regular 20-20-20 breaks and perform scheduled home visual screenings.
+        </p>
+        <div class="flex flex-wrap gap-2 pt-2">
+          <a href="{{ url_for('patient_tests_hub') }}" class="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-xs font-semibold shadow flex items-center gap-1.5 transition">
+            <i data-lucide="play" class="w-3.5 h-3.5"></i> Take Eye Test
+          </a>
+          <a href="{{ url_for('patient_monitor') }}" class="px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center gap-1.5 transition">
+            <i data-lucide="line-chart" class="w-3.5 h-3.5"></i> Log Daily Symptoms
+          </a>
+          <a href="{{ url_for('download_patient_report', patient_id=profile.id) }}" class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center gap-1.5 transition">
+            <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-400"></i> Download Clinical PDF
+          </a>
+        </div>
+      </div>
+
+      <!-- Ocular Comfort / Health Gauge -->
+      <div class="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 flex items-center gap-5 min-w-[260px]">
+        <div class="relative w-20 h-20 flex items-center justify-center">
+          <svg class="w-20 h-20 transform -rotate-90">
+            <circle cx="40" cy="40" r="34" stroke="currentColor" stroke-width="7" class="text-slate-700/60" fill="transparent" />
+            <circle cx="40" cy="40" r="34" stroke="currentColor" stroke-width="7" 
+                    stroke-dasharray="213.6" 
+                    stroke-dashoffset="{{ 213.6 - (213.6 * (health_index / 100)) }}" 
+                    stroke-linecap="round" 
+                    class="{% if health_index > 75 %}text-emerald-400{% elif health_index > 50 %}text-amber-400{% else %}text-rose-400{% endif %}" 
+                    fill="transparent" />
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-xl font-bold font-mono">{{ health_index }}%</span>
+            <span class="text-[9px] uppercase tracking-wider text-slate-300">Score</span>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-300 font-medium">Eye Health Index</div>
+          <div class="text-sm font-bold text-white mt-0.5">
+            {% if health_index > 75 %}Optimal / Good
+            {% elif health_index > 50 %}Mild Fatigue
+            {% else %}Elevated Strain{% endif %}
+          </div>
+          <div class="text-[10px] text-slate-400 mt-1">Based on symptom logs & test stability</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Attention Ribbon / Doctor Assigned Tests -->
+  {% if pending_tasks %}
+    <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm">
+          <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider">Assigned Task from Ophthalmologist</h4>
+          <p class="text-xs text-amber-800 dark:text-amber-300">
+            Dr. Vance has requested: <b>{{ pending_tasks[0].test_type.replace('_', ' ').title() }}</b> ({{ pending_tasks[0].clinical_instructions }})
+          </p>
+        </div>
+      </div>
+      <a href="{{ url_for('patient_take_test', test_name='amsler' if 'amsler' in pending_tasks[0].test_type else ('dryeye' if 'dry' in pending_tasks[0].test_type else 'acuity')) }}" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap">
+        Perform Test Now
+      </a>
+    </div>
+  {% endif %}
+
+  <!-- Core Metric Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+    
+    <!-- Card 1: Last Visual Acuity -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between text-slate-500 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">Visual Acuity (OU)</span>
+        <i data-lucide="eye" class="w-4 h-4 text-medical-600"></i>
+      </div>
+      <div class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">
+        {% set last_acuity = profile.test_records.filter_by(test_type='visual_acuity').order_by(EyeTestRecord.date_conducted.desc()).first() %}
+        {{ last_acuity.primary_score if last_acuity else "20/20" }}
+      </div>
+      <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 mt-1">
+        <i data-lucide="check" class="w-3.5 h-3.5"></i> Refraction within normal limits
+      </div>
+      <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-[11px]">
+        <span class="text-slate-400">ISO Snellen Target</span>
+        <a href="{{ url_for('patient_take_test', test_name='acuity') }}" class="text-medical-600 hover:underline font-medium">Retest</a>
+      </div>
+    </div>
+
+    <!-- Card 2: Dry Eye / CVS Index -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between text-slate-500 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">Dry Eye / OSDI</span>
+        <i data-lucide="droplet" class="w-4 h-4 text-blue-500"></i>
+      </div>
+      <div class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">
+        {% set last_cvs = profile.test_records.filter_by(test_type='dry_eye_cvs').order_by(EyeTestRecord.date_conducted.desc()).first() %}
+        {{ last_cvs.primary_score if last_cvs else "OSDI 28" }}
+      </div>
+      <div class="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1 mt-1">
+        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Mild Screen Strain
+      </div>
+      <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-[11px]">
+        <span class="text-slate-400">Artificial drops advised</span>
+        <a href="{{ url_for('patient_take_test', test_name='dryeye') }}" class="text-medical-600 hover:underline font-medium">OSDI Quiz</a>
+      </div>
+    </div>
+
+    <!-- Card 3: Active Prescription -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between text-slate-500 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">Optical Rx</span>
+        <i data-lucide="glasses" class="w-4 h-4 text-purple-600"></i>
+      </div>
+      {% if active_rx %}
+        <div class="text-xs font-mono font-bold text-slate-800 dark:text-slate-200">
+          OD: {{ active_rx.od_sphere }} / {{ active_rx.od_cylinder }} x {{ active_rx.od_axis }}°
+        </div>
+        <div class="text-xs font-mono font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+          OS: {{ active_rx.os_sphere }} / {{ active_rx.os_cylinder }} x {{ active_rx.os_axis }}°
+        </div>
+        <div class="mt-2 text-[10px] text-slate-500 truncate">
+          PD: {{ active_rx.pupillary_distance }} • {{ active_rx.lens_type }}
+        </div>
+      {% else %}
+        <div class="text-base font-bold text-slate-400">No active Rx</div>
+        <div class="text-[11px] text-slate-500 mt-1">Request an exam to get a prescription</div>
+      {% endif %}
+      <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-[11px]">
+        <span class="text-slate-400">Dr. Vance, MD</span>
+        <a href="{{ url_for('patient_prescriptions') }}" class="text-medical-600 hover:underline font-medium">View Rx</a>
+      </div>
+    </div>
+
+    <!-- Card 4: Next Consultation -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between text-slate-500 mb-2">
+        <span class="text-xs font-semibold uppercase tracking-wider">Next Consult</span>
+        <i data-lucide="calendar" class="w-4 h-4 text-teal-600"></i>
+      </div>
+      {% if upcoming_apts %}
+        <div class="text-base font-bold text-slate-900 dark:text-slate-100">
+          {{ upcoming_apts[0].scheduled_time.strftime('%a, %b %d') }}
+        </div>
+        <div class="text-xs text-slate-600 dark:text-slate-400">
+          {{ upcoming_apts[0].scheduled_time.strftime('%I:%M %p') }} • Telehealth
+        </div>
+        <div class="text-[11px] text-teal-600 font-medium truncate mt-1">
+          {{ upcoming_apts[0].reason }}
+        </div>
+      {% else %}
+        <div class="text-base font-bold text-slate-400">None Scheduled</div>
+        <div class="text-[11px] text-slate-500 mt-1">Book an online eye review</div>
+      {% endif %}
+      <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-[11px]">
+        <span class="text-slate-400">Virtual clinic</span>
+        <a href="{{ url_for('patient_appointments') }}" class="text-medical-600 hover:underline font-medium">Schedule</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Main Content Grid: Recent Test History & 20-20-20 Tool -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Left 2 Cols: Recent Test Results Table -->
+    <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-bold text-base text-slate-900 dark:text-slate-100">Recent Eye Test Records</h2>
+          <p class="text-xs text-slate-500">Clinically recorded screenings with physician review status</p>
+        </div>
+        <a href="{{ url_for('patient_tests_hub') }}" class="text-xs font-semibold text-medical-600 hover:underline flex items-center gap-1">
+          New Test <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        </a>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead>
+            <tr class="border-b border-slate-100 dark:border-slate-700 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+              <th class="py-2.5">Test Battery</th>
+              <th class="py-2.5">Eye</th>
+              <th class="py-2.5">Result</th>
+              <th class="py-2.5">Severity</th>
+              <th class="py-2.5">Date</th>
+              <th class="py-2.5 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
+            {% for test in recent_tests %}
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                <td class="py-3 font-semibold text-slate-800 dark:text-slate-200">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full 
+                      {% if test.severity == 'normal' %}bg-emerald-500
+                      {% elif test.severity == 'mild' %}bg-amber-500
+                      {% else %}bg-rose-500{% endif %}"></span>
+                    {{ test.test_type.replace('_', ' ').title() }}
+                  </div>
+                </td>
+                <td class="py-3 font-mono font-bold text-slate-600 dark:text-slate-300">{{ test.eye_tested }}</td>
+                <td class="py-3 font-medium text-slate-800 dark:text-slate-200">{{ test.primary_score }}</td>
+                <td class="py-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase
+                    {% if test.severity == 'normal' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300
+                    {% elif test.severity == 'mild' %}bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300
+                    {% else %}bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300{% endif %}">
+                    {{ test.severity }}
+                  </span>
+                </td>
+                <td class="py-3 text-slate-400">{{ test.date_conducted.strftime('%b %d, %Y') }}</td>
+                <td class="py-3 text-right">
+                  <a href="{{ url_for('patient_test_result', record_id=test.id) }}" class="text-medical-600 dark:text-medical-400 hover:text-medical-700 font-semibold">
+                    View Details
+                  </a>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="6" class="py-6 text-center text-slate-400">
+                  No eye tests recorded yet. Start by taking a Visual Acuity or Color Vision test!
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right 1 Col: Quick 20-20-20 Rule Helper & Symptom Trend -->
+    <div class="space-y-6">
+      
+      <!-- 20-20-20 Rule Card -->
+      <div class="bg-gradient-to-br from-teal-500 to-medical-700 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+        <div class="relative z-10 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded">Digital Ergonomics</span>
+            <i data-lucide="sparkles" class="w-4 h-4 text-teal-200"></i>
+          </div>
+          <h3 class="font-bold text-lg">20-20-20 Rule Coach</h3>
+          <p class="text-xs text-teal-50 leading-relaxed">
+            Every 20 minutes, shift eyes to look at an object 20 feet (6m) away for 20 seconds to relax ciliary spasm.
+          </p>
+          <a href="{{ url_for('patient_exercises') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white text-medical-800 rounded-xl text-xs font-bold shadow hover:bg-slate-100 transition">
+            <i data-lucide="play-circle" class="w-4 h-4 text-teal-600"></i> Open Timer & Eye Gym
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Doctor Bio & Contact -->
+      <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-500">
+          <span>Assigned Care Team</span>
+          <span class="text-emerald-500 font-bold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Available
+          </span>
+        </div>
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-full bg-medical-100 text-medical-700 flex items-center justify-center font-bold text-sm">
+            AV
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-900 dark:text-slate-100">Dr. Alistair Vance, MD</div>
+            <div class="text-[11px] text-slate-500">Comprehensive Ophthalmology</div>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500 leading-relaxed">
+          St. Jude Eye & Vision Institute • 450 Lexington Ave, Suite 700
+        </p>
+        <a href="{{ url_for('patient_appointments') }}" class="block text-center py-2 bg-slate-100 dark:bg-slate-700 hover:bg-medical-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition">
+          Request Consultation
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Amsler Grid Macular Screening | OptiVision{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xl">
+          <i data-lucide="grid" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Amsler Grid Macular Map</h1>
+          <p class="text-xs text-slate-500">Screening for Central Scotomas, Metamorphopsia & Macular Degeneration (AMD)</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold text-slate-500">Eye:</span>
+        <select id="amslerEyeSelect" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700 text-xs font-bold text-amber-700 dark:text-amber-300">
+          <option value="OD">OD (Right Eye)</option>
+          <option value="OS">OS (Left Eye)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/40 text-xs text-slate-700 dark:text-slate-300 space-y-2">
+      <div class="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i> Clinical Examination Instructions:
+      </div>
+      <ul class="list-disc list-inside space-y-1 leading-relaxed">
+        <li>Hold your screen approximately <b>35 cm (14 inches)</b> from your face (reading distance).</li>
+        <li>Wear your normal reading glasses if you usually wear them for close work.</li>
+        <li>Cover your other eye with your hand.</li>
+        <li><b>Fixate your gaze directly on the center white/red dot</b>. While staring at the center dot, answer:
+          <span class="block ml-4 text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">• Do all grid lines look completely straight and unbroken?</span>
+          <span class="block ml-4 text-[11px] text-slate-600 dark:text-slate-400">• Are there any dark holes, grey patches, blurry spots, or wavy distorted lines?</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Interactive Canvas Grid Container -->
+    <div class="flex flex-col items-center justify-center p-6 bg-slate-950 rounded-2xl border-4 border-slate-800 shadow-2xl relative">
+      
+      <!-- Toolbar for Interactive Defect Marker -->
+      <div class="w-full flex flex-wrap items-center justify-between gap-2 mb-4 px-2 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-slate-400 text-[11px]">Marker Tool:</span>
+          <button type="button" onclick="setMarkerTool('scotoma')" id="toolScotoma" class="px-3 py-1 rounded-lg bg-rose-600 text-white font-bold text-[11px] flex items-center gap-1 shadow">
+            <i data-lucide="circle-dot" class="w-3.5 h-3.5"></i> Mark Blind Spot (Scotoma)
+          </button>
+          <button type="button" onclick="setMarkerTool('wavy')" id="toolWavy" class="px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-[11px] flex items-center gap-1">
+            <i data-lucide="activity" class="w-3.5 h-3.5"></i> Mark Wavy Lines (Distortion)
+          </button>
+        </div>
+        <button type="button" onclick="clearAmslerDrawings()" class="text-slate-400 hover:text-rose-400 text-[11px] flex items-center gap-1">
+          <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Clear Marks
+        </button>
+      </div>
+
+      <!-- Canvas Element -->
+      <canvas id="amslerCanvas" width="400" height="400" class="rounded-xl cursor-crosshair bg-slate-950 select-none"></canvas>
+
+      <div class="mt-4 text-[11px] text-slate-400 font-mono text-center">
+        Tip: Click or drag on the grid to highlight any spots that look wavy, blurry, or missing.
+      </div>
+    </div>
+
+    <!-- Decision Submission Options -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+      <button onclick="submitAmsler(true)" class="p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/70 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-200 font-bold text-center transition flex flex-col items-center justify-center">
+        <div class="flex items-center gap-2 text-sm">
+          <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+          <span>Grid Appears 100% Normal</span>
+        </div>
+        <span class="text-[11px] text-emerald-700 dark:text-emerald-300 font-normal mt-1">All lines are straight, sharp, and no blank patches exist</span>
+      </button>
+
+      <button onclick="submitAmsler(false)" class="p-4 rounded-2xl border-2 border-amber-500 bg-amber-50/70 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-200 font-bold text-center transition flex flex-col items-center justify-center">
+        <div class="flex items-center gap-2 text-sm">
+          <i data-lucide="alert-octagon" class="w-5 h-5 text-amber-600"></i>
+          <span>I Marked Distortions / Scotomas</span>
+        </div>
+        <span class="text-[11px] text-amber-700 dark:text-amber-300 font-normal mt-1" id="marksCountLabel">0 marked areas recorded on grid</span>
+      </button>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const canvas = document.getElementById('amslerCanvas');
+  const ctx = canvas.getContext('2d');
+  let currentTool = 'scotoma';
+  let markedPoints = [];
+  let isDrawing = false;
+
+  function drawGrid() {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.fillStyle = '#050B14';
+    ctx.fillRect(0, 0, w, h);
+
+    const gridSize = 20; // 20x20 squares
+    const step = w / gridSize;
+
+    // Grid lines (Crisp white on dark background)
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= gridSize; i++) {
+      const pos = i * step;
+      // Vertical
+      ctx.beginPath();
+      ctx.moveTo(pos, 0);
+      ctx.lineTo(pos, h);
+      ctx.stroke();
+
+      // Horizontal
+      ctx.beginPath();
+      ctx.moveTo(0, pos);
+      ctx.lineTo(w, pos);
+      ctx.stroke();
+    }
+
+    // Outer border
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(0, 0, w, h);
+
+    // Redraw all marked defect spots
+    markedPoints.forEach(pt => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+      if (pt.tool === 'scotoma') {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.65)'; // Translucent Red
+      } else {
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.65)'; // Translucent Amber
+      }
+      ctx.fill();
+    });
+
+    // Central Fixation Point (Bright White + Red Core)
+    const cx = w / 2;
+    const cy = h / 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#EF4444';
+    ctx.fill();
+  }
+  drawGrid();
+
+  function setMarkerTool(tool) {
+    currentTool = tool;
+    if (tool === 'scotoma') {
+      document.getElementById('toolScotoma').className = 'px-3 py-1 rounded-lg bg-rose-600 text-white font-bold text-[11px] flex items-center gap-1 shadow';
+      document.getElementById('toolWavy').className = 'px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-[11px] flex items-center gap-1';
+    } else {
+      document.getElementById('toolScotoma').className = 'px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-bold text-[11px] flex items-center gap-1';
+      document.getElementById('toolWavy').className = 'px-3 py-1 rounded-lg bg-amber-600 text-white font-bold text-[11px] flex items-center gap-1 shadow';
+    }
+  }
+
+  function addMark(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    markedPoints.push({
+      x: Math.round(x),
+      y: Math.round(y),
+      radius: (currentTool === 'scotoma' ? 14 : 10),
+      tool: currentTool
+    });
+
+    drawGrid();
+    document.getElementById('marksCountLabel').innerText = `${markedPoints.length} defect region(s) marked`;
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    isDrawing = true;
+    addMark(e);
+  });
+  canvas.addEventListener('mousemove', (e) => {
+    if (isDrawing) addMark(e);
+  });
+  window.addEventListener('mouseup', () => { isDrawing = false; });
+
+  function clearAmslerDrawings() {
+    markedPoints = [];
+    drawGrid();
+    document.getElementById('marksCountLabel').innerText = '0 marked areas recorded on grid';
+  }
+
+  function submitAmsler(isNormal) {
+    const eye = document.getElementById('amslerEyeSelect').value;
+    
+    let primary = "Normal Central Macular Grid";
+    let secondary = "No Scotomas or Metamorphopsia Reported";
+    let severity = "normal";
+
+    if (!isNormal || markedPoints.length > 0) {
+      severity = "moderate";
+      primary = "Metamorphopsia / Scotoma Detected";
+      secondary = `${markedPoints.length} Abnormal Visual Zone(s) Marked`;
+    }
+
+    const payload = {
+      test_type: 'amsler_grid',
+      eye_tested: eye,
+      primary_score: primary,
+      secondary_score: secondary,
+      numerical_metric: markedPoints.length,
+      severity: severity,
+      distance_cm: 35.0,
+      test_data: {
+        is_normal: isNormal,
+        defect_count: markedPoints.length,
+        marked_coordinates: markedPoints
+      },
+      patient_notes: `Amsler grid test on ${eye}: ${primary}. Total marked anomalies: ${markedPoints.length}.`
+    };
+
+    fetch('/api/save-test-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      window.location.href = '/patient/dashboard';
+    });
+  }
+</script>
+{% endblock %}

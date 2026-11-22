@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Clinical Dossier | OptiVision Doctor Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Dossier Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-medical-600 to-teal-500 text-white font-extrabold text-2xl flex items-center justify-center shadow-md">
+        {{ patient.user.full_name[0] }}
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ patient.user.full_name }}</h1>
+          <span class="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold">
+            PT-{{ "%04d" % patient.id }}
+          </span>
+        </div>
+        <p class="text-xs text-slate-500 mt-0.5">
+          DOB: {{ patient.date_of_birth or "N/A" }} • Gender: {{ patient.gender or "N/A" }} • Tel: {{ patient.user.phone or "N/A" }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Doctor Clinical Actions -->
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{{ url_for('download_patient_report', patient_id=patient.id) }}" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition">
+        <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-500"></i> Download Full Clinical PDF
+      </a>
+      <a href="{{ url_for('doctor_new_prescription', patient_id=patient.id) }}" class="px-4 py-2 rounded-xl bg-medical-600 hover:bg-medical-700 text-white font-bold text-xs shadow-md shadow-medical-600/30 flex items-center gap-1.5 transition">
+        <i data-lucide="glasses" class="w-3.5 h-3.5"></i> Issue Optical Prescription
+      </a>
+    </div>
+  </div>
+
+  <!-- Medical Overview Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <!-- Medical & Refractive Background -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+      <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400">Refractive Background</h3>
+      <div class="space-y-2 text-xs">
+        <div class="flex justify-between">
+          <span class="text-slate-500">Eyewear:</span>
+          <span class="font-bold text-slate-800 dark:text-slate-200">
+            {% if patient.wear_glasses %}Glasses{% endif %}{% if patient.wear_contacts %}, Contacts{% endif %}
+            {% if not patient.wear_glasses and not patient.wear_contacts %}Unaided{% endif %}
+          </span>
+        </div>
+        <div>
+          <span class="text-slate-500 block mb-1">Clinical History:</span>
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-700/50 p-2.5 rounded-xl text-[11px]">
+            {{ patient.medical_history or "No significant ophthalmic history reported by patient." }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Optical Prescription -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+      <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400">Current Active Rx</h3>
+      {% set rx = patient.prescriptions.filter_by(status='active').first() %}
+      {% if rx %}
+        <div class="space-y-1.5 font-mono text-xs">
+          <div class="p-2 bg-blue-50/60 dark:bg-slate-700/50 rounded-lg">
+            <span class="font-bold text-blue-700 dark:text-blue-300">OD (Right):</span> {{ rx.od_sphere }} SPH / {{ rx.od_cylinder }} CYL x {{ rx.od_axis }}°
+          </div>
+          <div class="p-2 bg-blue-50/60 dark:bg-slate-700/50 rounded-lg">
+            <span class="font-bold text-blue-700 dark:text-blue-300">OS (Left):</span> {{ rx.os_sphere }} SPH / {{ rx.os_cylinder }} CYL x {{ rx.os_axis }}°
+          </div>
+          <div class="text-[10px] text-slate-500 font-sans mt-2">
+            PD: {{ rx.pupillary_distance }} • {{ rx.lens_type }}
+          </div>
+        </div>
+      {% else %}
+        <div class="text-xs text-slate-400 py-4 text-center">No active optical prescription</div>
+      {% endif %}
+    </div>
+
+    <!-- Assign Remote Eye Test Tool -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+      <h3 class="font-bold text-xs uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i> Prescribe Home Eye Test
+      </h3>
+      <form method="POST" action="{{ url_for('doctor_assign_test', patient_id=patient.id) }}" class="space-y-3 text-xs">
+        <div>
+          <select name="test_type" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white font-medium">
+            <option value="amsler_grid">Amsler Grid Macular Map</option>
+            <option value="visual_acuity">Visual Acuity (Snellen/E-Chart)</option>
+            <option value="dry_eye_cvs">Dry Eye & CVS (OSDI Survey)</option>
+            <option value="contrast_sensitivity">Contrast Sensitivity</option>
+            <option value="color_vision">Ishihara Color Plates</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <select name="frequency" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white">
+            <option value="Daily">Daily</option>
+            <option value="Every 3 Days">Every 3 Days</option>
+            <option value="Weekly" selected>Weekly</option>
+            <option value="Pre-Visit">Before Next Visit</option>
+          </select>
+          <input type="text" name="instructions" placeholder="e.g. Test OS eye" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white">
+        </div>
+        <button type="submit" class="w-full py-2 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl shadow transition">
+          Assign Test Task
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Complete Eye Test Battery History -->
+  <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="font-bold text-base text-slate-900 dark:text-slate-100">Ophthalmic Examination Records</h2>
+      <span class="text-xs text-slate-500">{{ tests|length }} clinical screenings recorded</span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead>
+          <tr class="border-b border-slate-100 dark:border-slate-700 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+            <th class="py-3">Battery</th>
+            <th class="py-3">Eye</th>
+            <th class="py-3">Primary Finding</th>
+            <th class="py-3">Clinical Severity</th>
+            <th class="py-3">Date Examined</th>
+            <th class="py-3">Physician Review</th>
+            <th class="py-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
+          {% for t in tests %}
+            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+              <td class="py-3.5 font-bold text-slate-900 dark:text-white">
+                {{ t.test_type.replace('_', ' ').title() }}
+              </td>
+              <td class="py-3.5 font-mono font-bold text-slate-700 dark:text-slate-300">{{ t.eye_tested }}</td>
+              <td class="py-3.5 font-medium text-slate-800 dark:text-slate-200">{{ t.primary_score }}</td>
+              <td class="py-3.5">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase
+                  {% if t.severity == 'normal' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300
+                  {% elif t.severity == 'mild' %}bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300
+                  {% else %}bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300{% endif %}">
+                  {{ t.severity }}
+                </span>
+              </td>
+              <td class="py-3.5 text-slate-400">{{ t.date_conducted.strftime('%b %d, %Y') }}</td>
+              <td class="py-3.5">
+                {% if t.doctor_reviewed_at %}
+                  <span class="text-emerald-600 font-semibold flex items-center gap-1 text-[11px]">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i> Reviewed
+                  </span>
+                {% else %}
+                  <span class="text-amber-500 font-semibold text-[11px]">Unreviewed</span>
+                {% endif %}
+              </td>
+              <td class="py-3.5 text-right">
+                <a href="{{ url_for('patient_test_result', record_id=t.id) }}" class="text-medical-600 dark:text-medical-400 font-bold hover:underline">
+                  Inspect & Add Notes
+                </a>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" class="py-8 text-center text-slate-400">No test records on file for this patient.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Assigned Test Tasks History -->
+  <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+    <h2 class="font-bold text-base text-slate-900 dark:text-slate-100">Assigned Remote Monitoring Tasks</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for task in assigned %}
+        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200/80 dark:border-slate-600/80 flex items-center justify-between text-xs">
+          <div>
+            <div class="font-bold text-slate-900 dark:text-white">{{ task.test_type.replace('_', ' ').title() }}</div>
+            <div class="text-slate-500 text-[11px]">Frequency: <b>{{ task.frequency }}</b> • Due: {{ task.due_date.strftime('%b %d') if task.due_date else 'Routine' }}</div>
+            <div class="text-[11px] text-teal-600 mt-0.5">Instructions: {{ task.clinical_instructions or "Routine home check" }}</div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase
+            {% if task.status == 'completed' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300
+            {% else %}bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300{% endif %}">
+            {{ task.status }}
+          </span>
+        </div>
+      {% else %}
+        <div class="text-xs text-slate-400 col-span-2 py-4 text-center">No assigned test tasks active.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

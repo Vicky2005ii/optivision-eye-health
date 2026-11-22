@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Ishihara Color Vision Test | OptiVision{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+  <!-- Overview Card -->
+  <div id="setupCard" class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">
+    <div class="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-700">
+      <div class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xl">
+        <i data-lucide="palette" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Ishihara Pseudoisochromatic Color Test</h1>
+        <p class="text-xs text-slate-500">Screening for Protanopia, Deuteranopia, and Tritan Color Deficiencies</p>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+      <p class="font-semibold text-slate-800 dark:text-slate-100">Test Conditions:</p>
+      <ul class="list-disc list-inside space-y-1.5 leading-relaxed">
+        <li>Hold your screen approximately <b>50 - 60 cm (arm's length)</b> away.</li>
+        <li>Disable "True Tone", "Night Shift", f.lux, or blue light filters before starting, as color filters invalidate the test.</li>
+        <li>You will be presented with 10 calibrated color plates. Enter the number embedded within the circle.</li>
+        <li>If no number is discernible, click the <b>"Nothing Visible"</b> button.</li>
+      </ul>
+    </div>
+
+    <button onclick="startColorTest()" class="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2 transition">
+      <i data-lucide="play" class="w-4 h-4"></i>
+      <span>Start Color Vision Test</span>
+    </button>
+  </div>
+
+  <!-- Live Test Card (Hidden initially) -->
+  <div id="liveCard" class="hidden bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">
+    
+    <!-- Progress Bar -->
+    <div class="flex items-center justify-between text-xs text-slate-500 pb-3 border-b border-slate-100 dark:border-slate-700">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-rose-600 font-mono text-sm" id="plateNumberLabel">Plate 1 of 10</span>
+        <span class="text-slate-300">|</span>
+        <span class="text-slate-500">Score: <b id="liveScore" class="text-slate-800 dark:text-slate-200">0 Correct</b></span>
+      </div>
+      <button onclick="location.reload()" class="text-slate-400 hover:text-rose-500">Exit Test</button>
+    </div>
+
+    <!-- Canvas Container for Ishihara Plate -->
+    <div class="flex flex-col items-center justify-center p-4">
+      <div class="relative p-2 bg-slate-900 rounded-full shadow-2xl border-4 border-slate-800">
+        <canvas id="ishiharaCanvas" width="340" height="340" class="rounded-full select-none cursor-default"></canvas>
+      </div>
+      <div class="mt-4 text-xs font-semibold text-slate-500">
+        What number do you see in the circle above?
+      </div>
+    </div>
+
+    <!-- Answer Input & Keypad -->
+    <div class="max-w-xs mx-auto space-y-3">
+      <div class="flex gap-2">
+        <input type="text" id="plateAnswerInput" placeholder="Enter number..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-center font-bold text-lg tracking-wider text-slate-800 dark:text-white focus:ring-2 focus:ring-rose-500">
+        <button onclick="submitPlateAnswer(document.getElementById('plateAnswerInput').value)" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow transition">
+          Submit
+        </button>
+      </div>
+
+      <!-- Quick Number Buttons -->
+      <div class="grid grid-cols-4 gap-2 pt-1" id="quickButtons">
+        <!-- Rendered by JS -->
+      </div>
+
+      <button onclick="submitPlateAnswer('NONE')" class="w-full py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 text-xs font-semibold rounded-xl transition">
+        I Cannot See Any Number (Blank Plate)
+      </button>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // 10 Calibrated Test Plates with target numbers and color palette mappings
+  const PLATES = [
+    { num: 12, bgPalette: ['#A0C080', '#88AA66', '#B0D090'], numPalette: ['#E07050', '#D05540', '#F08060'], type: 'demo', desc: "Demonstration Plate (Visible to all individuals)" },
+    { num: 8,  bgPalette: ['#C89666', '#B58555', '#D5A877'], numPalette: ['#5A9E6F', '#4A8E5F', '#6AAE7F'], type: 'red-green', desc: "Red-Green Screening (Normal: 8, Deficient: 3 or none)" },
+    { num: 6,  bgPalette: ['#559977', '#66AA88', '#448866'], numPalette: ['#D97040', '#E58050', '#C56030'], type: 'red-green', desc: "Red-Green Screening (Normal: 6, Deficient: none)" },
+    { num: 29, bgPalette: ['#C58A5A', '#B57A4A', '#D59A6A'], numPalette: ['#529E72', '#428E62', '#62AE82'], type: 'red-green', desc: "Red-Green Screening (Normal: 29, Deficient: 70)" },
+    { num: 57, bgPalette: ['#599B77', '#498B67', '#69AB87'], numPalette: ['#D6664A', '#C6563A', '#E6765A'], type: 'red-green', desc: "Red-Green Screening (Normal: 57, Deficient: 35)" },
+    { num: 5,  bgPalette: ['#C88E62', '#B87E52', '#D89E72'], numPalette: ['#4E9B6B', '#3E8B5B', '#5EAB7B'], type: 'red-green', desc: "Red-Green Screening (Normal: 5, Deficient: 2)" },
+    { num: 3,  bgPalette: ['#589975', '#488965', '#68A985'], numPalette: ['#D46747', '#C45737', '#E47757'], type: 'red-green', desc: "Red-Green Screening (Normal: 3, Deficient: 5)" },
+    { num: 15, bgPalette: ['#C68C5E', '#B67C4E', '#D69C6E'], numPalette: ['#529F71', '#428F61', '#62AF81'], type: 'red-green', desc: "Red-Green Screening (Normal: 15, Deficient: 17)" },
+    { num: 74, bgPalette: ['#549A72', '#448A62', '#64AA82'], numPalette: ['#D26442', '#C25432', '#E27452'], type: 'red-green', desc: "Red-Green Screening (Normal: 74, Deficient: 21)" },
+    { num: 2,  bgPalette: ['#C99064', '#B98054', '#D9A074'], numPalette: ['#4C9B6A', '#3C8B5A', '#5CAB7A'], type: 'red-green', desc: "Red-Green Screening (Normal: 2, Deficient: none)" }
+  ];
+
+  let currentPlateIdx = 0;
+  let correctCount = 0;
+  let responses = [];
+
+  function startColorTest() {
+    document.getElementById('setupCard').classList.add('hidden');
+    document.getElementById('liveCard').classList.remove('hidden');
+    currentPlateIdx = 0;
+    correctCount = 0;
+    responses = [];
+    renderPlate(currentPlateIdx);
+  }
+
+  function renderPlate(idx) {
+    const plate = PLATES[idx];
+    document.getElementById('plateNumberLabel').innerText = `Plate ${idx + 1} of ${PLATES.length}`;
+    document.getElementById('liveScore').innerText = `${correctCount} Correct`;
+    document.getElementById('plateAnswerInput').value = '';
+    document.getElementById('plateAnswerInput').focus();
+
+    // Render Quick Buttons
+    renderQuickButtons(plate.num);
+
+    const canvas = document.getElementById('ishiharaCanvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const radius = w * 0.46;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Create an offscreen buffer canvas to render the number mask
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = w;
+    maskCanvas.height = h;
+    const mctx = maskCanvas.getContext('2d');
+    mctx.fillStyle = '#FFFFFF';
+    mctx.font = 'bold 150px Arial';
+    mctx.textAlign = 'center';
+    mctx.textBaseline = 'middle';
+    mctx.fillText(plate.num.toString(), cx, cy + 8);
+
+    // Generate pseudo-isochromatic dots
+    const numDots = 850;
+    for (let i = 0; i < numDots; i++) {
+      // Pick random point in circle
+      const r = Math.sqrt(Math.random()) * radius;
+      const theta = Math.random() * Math.PI * 2;
+      const x = cx + r * Math.cos(theta);
+      const y = cy + r * Math.sin(theta);
+
+      // Dot size between 3px and 8px
+      const dotRadius = 3.2 + Math.random() * 5.0;
+
+      // Sample mask canvas to check if this dot falls on the number
+      const pixel = mctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+      const isNumberDot = (pixel[3] > 128);
+
+      let color;
+      if (isNumberDot) {
+        color = plate.numPalette[Math.floor(Math.random() * plate.numPalette.length)];
+      } else {
+        color = plate.bgPalette[Math.floor(Math.random() * plate.bgPalette.length)];
+      }
+
+      ctx.beginPath();
+      ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+  }
+
+  function renderQuickButtons(targetNum) {
+    const container = document.getElementById('quickButtons');
+    container.innerHTML = '';
+    
+    // Distractors
+    const options = new Set([targetNum]);
+    while (options.size < 4) {
+      options.add(Math.floor(Math.random() * 80) + 1);
+    }
+    const arr = Array.from(options).sort(() => Math.random() - 0.5);
+
+    arr.forEach(opt => {
+      const b = document.createElement('button');
+      b.className = 'py-2 bg-slate-100 dark:bg-slate-700 hover:bg-rose-50 dark:hover:bg-slate-600 text-slate-800 dark:text-white text-xs font-bold rounded-xl transition';
+      b.innerText = opt;
+      b.onclick = () => submitPlateAnswer(opt.toString());
+      container.appendChild(b);
+    });
+  }
+
+  function submitPlateAnswer(ans) {
+    const plate = PLATES[currentPlateIdx];
+    const cleanAns = (ans || '').trim();
+    const isCorrect = (cleanAns === plate.num.toString());
+    
+    if (isCorrect) correctCount++;
+    responses.push({
+      plate_index: currentPlateIdx + 1,
+      target: plate.num,
+      given: cleanAns,
+      correct: isCorrect
+    });
+
+    currentPlateIdx++;
+    if (currentPlateIdx < PLATES.length) {
+      renderPlate(currentPlateIdx);
+    } else {
+      finishColorTest();
+    }
+  }
+
+  function finishColorTest() {
+    const total = PLATES.length;
+    const scorePct = Math.round((correctCount / total) * 100);
+    
+    let classification = "Normal Trichromat";
+    let severity = "normal";
+
+    if (scorePct < 70) {
+      classification = "Deuteranopia / Red-Green Deficiency";
+      severity = "abnormal";
+    } else if (scorePct < 90) {
+      classification = "Mild Color Discrimination Weakness";
+      severity = "mild";
+    }
+
+    const payload = {
+      test_type: 'color_vision',
+      eye_tested: 'OU',
+      primary_score: `${correctCount}/${total} Correct (${scorePct}%)`,
+      secondary_score: classification,
+      numerical_metric: scorePct,
+      severity: severity,
+      distance_cm: 50.0,
+      test_data: {
+        scorePct: scorePct,
+        correctCount: correctCount,
+        totalPlates: total,
+        classification: classification,
+        responses: responses
+      },
+      patient_notes: `Ishihara color test score: ${correctCount}/${total}. Evaluated as ${classification}.`
+    };
+
+    fetch('/api/save-test-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      window.location.href = '/patient/dashboard';
+    });
+  }
+
+  document.getElementById('plateAnswerInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      submitPlateAnswer(e.target.value);
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Contrast Sensitivity Test | OptiVision{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+  <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-xl">
+          <i data-lucide="sun-medium" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Contrast Sensitivity Test</h1>
+          <p class="text-xs text-slate-500">Pelli-Robson Scale (100% to 1.5% Michelson/Weber Contrast)</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold text-slate-500">Eye:</span>
+        <select id="contrastEyeSelect" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700 text-xs font-bold text-teal-700 dark:text-teal-300">
+          <option value="OU">OU (Both Eyes)</option>
+          <option value="OD">OD (Right Eye)</option>
+          <option value="OS">OS (Left Eye)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="p-4 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-800/40 text-xs text-slate-600 dark:text-slate-300 space-y-2">
+      <div class="font-bold text-teal-900 dark:text-teal-200 flex items-center gap-1.5">
+        <i data-lucide="info" class="w-4 h-4 text-teal-600"></i> Testing Protocol:
+      </div>
+      <p class="leading-relaxed">
+        Sit 1 meter (approx. arm + shoulder length) away from the screen.
+        You will see triplets of letters where the contrast gradually fades into the background.
+        Enter the 3 letters you see on each line until you can no longer distinguish the faint shapes.
+      </p>
+    </div>
+
+    <!-- Active Triplet Display -->
+    <div class="min-h-[220px] flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200 dark:border-slate-700 relative shadow-inner">
+      <div id="tripletDisplay" class="text-5xl sm:text-7xl font-mono-opt font-bold tracking-[0.35em] transition-all duration-200 select-none text-slate-900">
+        V R K
+      </div>
+      <div class="mt-4 text-[10px] text-slate-400 font-mono" id="contrastLevelInfo">
+        Triplet 1 of 8 • Contrast: 100% • LogCS: 0.00
+      </div>
+    </div>
+
+    <!-- Response Input -->
+    <div class="max-w-xs mx-auto space-y-3">
+      <div class="text-xs font-semibold text-slate-500 text-center">
+        Type the 3 letters shown above:
+      </div>
+      <div class="flex gap-2">
+        <input type="text" id="tripletInput" maxlength="3" placeholder="e.g. VRK" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-center font-mono font-bold text-xl uppercase tracking-widest text-slate-800 dark:text-white focus:ring-2 focus:ring-teal-500">
+        <button onclick="submitTriplet()" class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow transition">
+          Confirm
+        </button>
+      </div>
+      <button onclick="finishContrastTest(true)" class="w-full py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-xl transition">
+        Cannot Read / Faded Out
+      </button>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Progressive contrast degradation (opacity relative to white background)
+  const TRIPLETS = [
+    { letters: "V R K", contrast: 1.00, logCS: 0.00, desc: "100% High Contrast" },
+    { letters: "N D C", contrast: 0.50, logCS: 0.30, desc: "50% Contrast" },
+    { letters: "Z O H", contrast: 0.25, logCS: 0.60, desc: "25% Contrast" },
+    { letters: "S K R", contrast: 0.12, logCS: 0.90, desc: "12% Contrast" },
+    { letters: "C D S", contrast: 0.06, logCS: 1.20, desc: "6% Contrast" },
+    { letters: "H N Z", contrast: 0.035,logCS: 1.50, desc: "3.5% Contrast (Normal Threshold)" },
+    { letters: "K P E", contrast: 0.02, logCS: 1.70, desc: "2.0% Low Contrast" },
+    { letters: "O F T", contrast: 0.012,logCS: 1.95, desc: "1.2% Very Faint" }
+  ];
+
+  let currentIdx = 0;
+  let highestLogCS = 0.00;
+
+  function updateTripletView() {
+    const t = TRIPLETS[currentIdx];
+    const el = document.getElementById('tripletDisplay');
+    el.innerText = t.letters;
+    el.style.opacity = t.contrast.toString();
+
+    document.getElementById('contrastLevelInfo').innerText = 
+      `Triplet ${currentIdx + 1} of ${TRIPLETS.length} • Contrast: ${(t.contrast * 100).toFixed(1)}% • LogCS: ${t.logCS.toFixed(2)}`;
+    
+    document.getElementById('tripletInput').value = '';
+    document.getElementById('tripletInput').focus();
+  }
+  updateTripletView();
+
+  function submitTriplet() {
+    const val = document.getElementById('tripletInput').value.trim().toUpperCase();
+    const targetClean = TRIPLETS[currentIdx].letters.replace(/\s+/g, '');
+    
+    // Check if at least 2 of 3 letters match
+    let matches = 0;
+    for (let i = 0; i < Math.min(val.length, targetClean.length); i++) {
+      if (val[i] === targetClean[i]) matches++;
+    }
+
+    if (matches >= 2) {
+      highestLogCS = TRIPLETS[currentIdx].logCS;
+      currentIdx++;
+      if (currentIdx < TRIPLETS.length) {
+        updateTripletView();
+      } else {
+        finishContrastTest(false);
+      }
+    } else {
+      finishContrastTest(true);
+    }
+  }
+
+  function finishContrastTest(thresholdReached) {
+    const eye = document.getElementById('contrastEyeSelect').value;
+    let severity = 'normal';
+    let assessment = 'Normal Contrast Sensitivity';
+
+    if (highestLogCS < 1.0) {
+      severity = 'severe';
+      assessment = 'Significantly Reduced Contrast Sensitivity';
+    } else if (highestLogCS < 1.45) {
+      severity = 'moderate';
+      assessment = 'Subclinical Contrast Reduction (Glaucoma/Cataract Risk)';
+    } else if (highestLogCS < 1.65) {
+      severity = 'mild';
+      assessment = 'Mild Contrast Reduction';
+    }
+
+    const payload = {
+      test_type: 'contrast_sensitivity',
+      eye_tested: eye,
+      primary_score: `${highestLogCS.toFixed(2)} logCS`,
+      secondary_score: assessment,
+      numerical_metric: highestLogCS,
+      severity: severity,
+      distance_cm: 100.0,
+      test_data: {
+        highestLogCS: highestLogCS,
+        tripletsCompleted: currentIdx,
+        assessment: assessment
+      },
+      patient_notes: `Contrast test: ${highestLogCS.toFixed(2)} logCS (${assessment}).`
+    };
+
+    fetch('/api/save-test-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      window.location.href = '/patient/dashboard';
+    });
+  }
+
+  document.getElementById('tripletInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitTriplet();
+  });
+</script>
+{% endblock %}
