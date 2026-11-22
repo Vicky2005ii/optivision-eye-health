@@ -8,4 +8,23 @@ if root_dir not in sys.path:
 
 from app import app
 
-# Vercel looks for 'app' as the WSGI callable
+# WSGI middleware to handle Vercel path rewrites smoothly
+class VercelPathFix:
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        orig_path = environ.get('HTTP_X_FORWARDED_PATH') or environ.get('HTTP_X_MATCHED_PATH')
+        path = environ.get('PATH_INFO', '')
+        
+        if orig_path and not orig_path.startswith('/api/index'):
+            environ['PATH_INFO'] = orig_path
+        elif path in ('/api/index', '/api/index.py', '/api', '/api/'):
+            environ['PATH_INFO'] = '/'
+        elif path.startswith('/api/index/'):
+            environ['PATH_INFO'] = path.replace('/api/index', '', 1)
+            
+        return self.wsgi_app(environ, start_response)
+
+app.wsgi_app = VercelPathFix(app.wsgi_app)
+

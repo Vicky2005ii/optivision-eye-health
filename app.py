@@ -56,6 +56,11 @@ def inject_globals():
     }
 
 # ----------------- Public & Auth Routes -----------------
+@app.route('/api/index')
+@app.route('/api')
+def api_entrypoint_redirect():
+    return redirect(url_for('index'))
+
 @app.route('/')
 def index():
     if current_user.is_authenticated:
