@@ -11,3 +11,6 @@ instance/
 *.sqlite3
 *.log
 .DS_Store
+
+*.db
+ocucare.db
