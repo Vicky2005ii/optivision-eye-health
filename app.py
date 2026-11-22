@@ -8,11 +8,22 @@ from models import db, User, PatientProfile, DoctorProfile, EyeTestRecord, Sympt
 from seed_data import seed_database
 from report_generator import generate_patient_report_pdf
 
-app = Flask(__name__)
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static')
+)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'ocucare-secure-key-2026-ophthalmology')
 
-# Database configuration: support PostgreSQL / SQLite from environment
-db_url = os.environ.get('DATABASE_URL', 'sqlite:///ocucare.db')
+# Database configuration: support Vercel /tmp directory, PostgreSQL, or local SQLite
+if os.environ.get('VERCEL'):
+    default_db = f"sqlite:///{os.path.join('/tmp', 'ocucare.db')}"
+else:
+    default_db = f"sqlite:///{os.path.join(BASE_DIR, 'ocucare.db')}"
+
+db_url = os.environ.get('DATABASE_URL', default_db)
 if db_url.startswith('postgres://'):
     db_url = db_url.replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
